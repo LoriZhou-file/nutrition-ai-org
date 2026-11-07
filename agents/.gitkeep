@@ -1,0 +1,10 @@
+nutrition-ai-org/                 
+├── agents/                        
+├── skills/                        
+├── knowledge/                     
+├── configs/           
+├── outputs/                       
+├── .env.example                   
+├── .gitignore                     
+├── requirements.txt
+└── README.md
