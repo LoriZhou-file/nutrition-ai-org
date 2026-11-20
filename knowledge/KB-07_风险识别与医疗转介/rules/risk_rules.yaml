@@ -52,7 +52,7 @@ rules:
 
   - id: R-MED
     name: 涉及药物调整的请求
-    level: red
+    level: yellow
     trigger:
       type: intent
       description: 用户询问能否停药、减药、改药，或为了配合饮食自行调整药量
