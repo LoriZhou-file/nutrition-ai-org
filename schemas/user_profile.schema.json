@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "seeknutri/user_profile.schema.json",
+  "title": "SeekNutri 第一期用户结构化档案",
+  "description": "草案 v0.1。第一期不收姓名与手机号，使用匿名会话标识。字段含义与取值待营养师顾问团审定。",
+  "type": "object",
+  "required": ["session_id", "consent", "screening", "mode", "risk_level", "status"],
+  "properties": {
+    "session_id": {
+      "type": "string",
+      "description": "匿名会话标识，不含个人身份信息"
+    },
+    "source": {
+      "type": "string",
+      "description": "来源渠道，如视频口令、二维码批次，用于统计入口效果"
+    },
+    "consent": {
+      "type": "object",
+      "required": ["health_data", "version", "timestamp"],
+      "properties": {
+        "health_data": { "type": "boolean", "description": "健康信息单独同意" },
+        "interest_contact": { "type": "boolean", "description": "是否同意被联系了解陪跑意向，默认否" },
+        "version": { "type": "string", "description": "隐私说明版本号" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      }
+    },
+    "screening": {
+      "type": "object",
+      "description": "S1 排除筛查，任一命中则转介，不生成饮食方案",
+      "required": ["adult", "pregnant_or_lactating", "type1_diabetes", "severe_kidney_or_eating_disorder"],
+      "properties": {
+        "adult": { "type": "boolean" },
+        "pregnant_or_lactating": { "type": "boolean" },
+        "type1_diabetes": { "type": "boolean" },
+        "severe_kidney_or_eating_disorder": { "type": "boolean" }
+      }
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["standard", "conservative", "referred"],
+      "description": "standard 标准；conservative 使用胰岛素或促泌类药物的保守模式；referred 已转介"
+    },
+    "basic": {
+      "type": "object",
+      "properties": {
+        "age_band": { "type": "string", "enum": ["18-29", "30-39", "40-49", "50-59", "60-69", "70+"] },
+        "sex": { "type": "string", "enum": ["female", "male", "prefer_not_to_say"] },
+        "height_cm": { "type": "number" },
+        "weight_kg": { "type": "number" },
+        "waist_cm": { "type": ["number", "null"] },
+        "bmi": { "type": ["number", "null"], "description": "由系统计算，不由用户填写" }
+      }
+    },
+    "glycemic": {
+      "type": "object",
+      "properties": {
+        "diagnosed": { "type": "string", "enum": ["yes", "no", "unsure"] },
+        "recent_indicators": {
+          "type": "array",
+          "description": "可选；必须带测量日期与类型，缺信息时由 AI 追问",
+          "items": {
+            "type": "object",
+            "required": ["type", "value", "unit", "measured_on"],
+            "properties": {
+              "type": { "type": "string", "enum": ["fasting_glucose", "postprandial_glucose", "hba1c", "other"] },
+              "value": { "type": "number" },
+              "unit": { "type": "string" },
+              "measured_on": { "type": "string", "format": "date" }
+            }
+          }
+        },
+        "uses_glucose_lowering_drug": { "type": "string", "enum": ["no", "oral", "insulin", "oral_and_insulin", "unsure"], "description": "只记大类，不记剂量" }
+      }
+    },
+    "diet_log": {
+      "type": "object",
+      "properties": {
+        "typical_day": { "type": "boolean", "description": "用户是否认为这是典型的一天" },
+        "meals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["meal"],
+            "properties": {
+              "meal": { "type": "string", "enum": ["breakfast", "lunch", "dinner", "snack"] },
+              "time": { "type": ["string", "null"], "description": "大致时间，如 07:30" },
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["food"],
+                  "properties": {
+                    "food": { "type": "string" },
+                    "portion": { "type": ["string", "null"], "description": "份量，用拳头、碗、掌心等" },
+                    "cooking": { "type": ["string", "null"] }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "beverages": { "type": "array", "items": { "type": "string" } },
+        "eating_out_frequency": { "type": "string", "enum": ["rarely", "sometimes", "often", "unknown"] }
+      }
+    },
+    "lifestyle": {
+      "type": "object",
+      "properties": {
+        "activity": { "type": "string", "enum": ["low", "moderate", "high", "unknown"] },
+        "sleep_hours_band": { "type": "string", "enum": ["<6", "6-7", "7-8", ">8", "unknown"] }
+      }
+    },
+    "concerns": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "用户最关心的问题（原话要点），用于汇总分析"
+    },
+    "risk_level": { "type": "string", "enum": ["green", "yellow", "red"] },
+    "risk_flags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "命中的规则编号，见 knowledge/KB-07_风险识别与医疗转介/rules/risk_rules.yaml"
+    },
+    "advice_summary_id": { "type": ["string", "null"], "description": "生成的自查小结记录编号" },
+    "interest": {
+      "type": "object",
+      "properties": {
+        "coaching_interest": { "type": "boolean" },
+        "notes": { "type": ["string", "null"] }
+      }
+    },
+    "user_confirmed": { "type": "boolean", "description": "用户已查看并确认档案" },
+    "status": { "type": "string", "enum": ["in_progress", "completed", "referred", "deleted"] },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" }
+  }
+}

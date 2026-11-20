@@ -1,0 +1,149 @@
+# 风险规则库（草案 v0.1）
+#
+# 重要说明
+# - 本文件只是规则框架。凡标注 TODO_CLINICAL 的阈值、时限和处理动作，
+#   必须由营养师与医疗顾问审定后填写，不得由 AI 或开发人员自行设定。
+# - 规则由代码（规则引擎）在模型回答之前执行，不依赖模型自由判断。
+# - 所有 status 为 pending_review 的规则不得在对外环境启用。
+
+version: "0.1"
+status: pending_review
+levels:
+  green: 给一般性建议，附简短提示
+  yellow: 给有限建议，明确建议咨询营养师或医生后再调整
+  red: 停止营养建议，提示及时就医或联系紧急服务
+
+rules:
+  - id: R-EMG
+    name: 急性危险症状
+    level: red
+    trigger:
+      type: symptom_keywords
+      description: 用户描述胸痛、严重呼吸困难、突发意识异常或昏迷等紧急情况
+      keywords: TODO_CLINICAL
+    action:
+      stop_nutrition_advice: true
+      message_id: MSG-EMG
+    status: pending_review
+
+  - id: R-HYPO
+    name: 疑似低血糖症状（尤其用药人群）
+    level: red
+    trigger:
+      type: symptom_keywords
+      description: 用户描述心慌、出冷汗、手抖、头晕、乏力等低血糖相关表现，且使用胰岛素或降糖药，或近期有减少进食、跳餐、增加运动的情况
+      keywords: TODO_CLINICAL
+    action:
+      stop_nutrition_advice: true
+      message_id: MSG-HYPO
+    status: pending_review
+
+  - id: R-HYPER
+    name: 疑似高血糖急症
+    level: red
+    trigger:
+      type: symptom_and_value
+      description: 明显口渴多尿、恶心呕吐、呼吸异常或意识改变，伴血糖明显异常
+      thresholds: TODO_CLINICAL
+    action:
+      stop_nutrition_advice: true
+      message_id: MSG-HYPER
+    status: pending_review
+
+  - id: R-MED
+    name: 涉及药物调整的请求
+    level: red
+    trigger:
+      type: intent
+      description: 用户询问能否停药、减药、改药，或为了配合饮食自行调整药量
+    action:
+      stop_nutrition_advice: false
+      refuse_topic: medication_change
+      message_id: MSG-MED
+    status: pending_review
+
+  - id: R-EXCL
+    name: 排除人群
+    level: red
+    trigger:
+      type: screening
+      description: S1 筛查命中，未满 18 岁、孕期或哺乳期、1 型糖尿病、严重肾病或进食障碍史
+    action:
+      mode: referred
+      stop_nutrition_advice: true
+      message_id: MSG-EXCL
+    status: pending_review
+
+  - id: R-VALUE
+    name: 指标明显异常
+    level: yellow
+    trigger:
+      type: value_threshold
+      description: 用户填写的血糖或糖化血红蛋白数值明显异常，需要医疗评估
+      thresholds: TODO_CLINICAL
+      require_measured_date: true
+    action:
+      stop_nutrition_advice: false
+      add_notice: advise_medical_evaluation
+      message_id: MSG-VALUE
+    status: pending_review
+
+  - id: R-RAPID
+    name: 不明原因快速体重变化
+    level: yellow
+    trigger:
+      type: intent_or_value
+      description: 用户描述短期内不明原因的明显体重下降或增加，尤其伴其他症状
+      thresholds: TODO_CLINICAL
+    action:
+      add_notice: advise_medical_evaluation
+      message_id: MSG-RAPID
+    status: pending_review
+
+  - id: R-EXTREME
+    name: 极端节食或禁食请求
+    level: yellow
+    trigger:
+      type: intent
+      description: 用户想要极端节食、长时间禁食、只吃单一食物，尤其使用胰岛素或降糖药者
+    action:
+      conservative_mode_required: true
+      refuse_topic: extreme_diet
+      message_id: MSG-EXTREME
+    status: pending_review
+
+  - id: R-DX
+    name: 要求诊断
+    level: yellow
+    trigger:
+      type: intent
+      description: 用户要求判断自己是否患有糖尿病或其他疾病
+    action:
+      refuse_topic: diagnosis
+      message_id: MSG-DX
+    status: pending_review
+
+  - id: R-ED
+    name: 进食障碍相关信号
+    level: red
+    trigger:
+      type: intent
+      description: 用户表达催吐、暴食后补偿、严重恐惧进食等
+    action:
+      mode: referred
+      stop_nutrition_advice: true
+      message_id: MSG-ED
+    status: pending_review
+
+# 固定回复话术（草案，须审定）。语言要克制，不吓人，不替用户做医疗决定。
+messages:
+  MSG-EMG: "你描述的情况可能比较紧急。请立即拨打 120 或尽快前往最近的急诊。现在先不讨论饮食。"
+  MSG-HYPO: "你说的这些情况可能和血糖偏低有关，尤其在使用降糖药或胰岛素时需要重视。请先按医生之前给你的处理方法处理，并尽快联系医生。现在先不调整饮食。"
+  MSG-HYPER: "你描述的情况需要尽快由医生评估。请尽快联系医生或前往医院。现在先不讨论饮食调整。"
+  MSG-MED: "药物的种类、剂量和时间需要由医生决定，我不能给这方面的建议。如果你担心用药和饮食怎么配合，请先和医生沟通。我可以在你的医生允许的前提下，和你聊饮食结构和生活习惯。"
+  MSG-EXCL: "根据你的情况，目前不适合由我给出饮食方案。建议你咨询医生或营养师，由他们根据你的具体情况来指导。"
+  MSG-VALUE: "你提供的指标需要由医生进一步评估。我可以先和你聊一般性的生活习惯，但具体情况请尽快咨询医生。"
+  MSG-RAPID: "短期内体重明显变化，建议先让医生做一下评估，排除其他原因。"
+  MSG-EXTREME: "极端节食或长时间不吃东西可能带来风险，尤其在使用降糖药时。我不建议这样做。我们可以聊更稳妥的做法。"
+  MSG-DX: "我不能判断你是否患有某种疾病。如果你担心，请去医院做相关检查，由医生来判断。"
+  MSG-ED: "谢谢你愿意说出来。你说的这些情况需要专业的人来帮助你，建议尽快联系医生或心理健康专业人员。现在我不会给你饮食方案。"
