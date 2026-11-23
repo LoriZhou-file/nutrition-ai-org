@@ -42,6 +42,51 @@ CLARIFY_SCHEMA = """只输出一个 JSON 对象：
 如果信息已经足够，返回 {"questions": []}。"""
 
 
+CHAT_SCOPE = """
+你现在在和用户自由对话。
+- 先直接回答用户的问题，口语化，不超过 180 字，不用 markdown 标题，不要罗列大段条目。
+- 只回答饮食、营养、血糖相关的生活方式问题；其他话题礼貌说明你主要帮忙解答控糖饮食。
+- 知识片段里没有的内容，说明不确定，不要编造；用药、诊断、治疗相关的问题，说明需要医生判断，不要给结论。
+- 回答之后，最多再问一个自然的追问，帮助更了解用户（比如最关心什么、平时怎么吃）；不要一次问多个，也不要追问姓名电话。
+- 不要主动索要药量、具体指标数值。"""
+
+CHAT_UNKNOWN_MED = """
+【保守】目前不确定用户是否在使用降糖药物，存在低血糖风险。不要建议少吃、跳餐、禁食、大幅减少主食或碳水，也不要建议空腹或高强度运动。
+如果用户想要针对自己的具体建议，告诉他可以点“帮我分析一天饮食”，先确认几个安全问题。"""
+
+CHAT_SCHEMA = """只输出一个 JSON 对象，不要输出其他文字：
+{
+  "reply": "对用户问题的直接回答",
+  "follow_up": "一个自然的追问，没有则为空字符串",
+  "quick_replies": ["用户可能想点的下一步，最多 3 个，每个不超过 16 个字，没有则为空数组"],
+  "slot_updates": {"concerns": ["用户明确说出的关注点，每个不超过 12 个字"], "age_band": "仅当用户明确说了年龄", "sex": "仅当用户明确说了性别"},
+  "sources": ["使用到的知识片段编号"]
+}
+slot_updates 只填用户明确说过的内容，没说过的字段不要写。age_band 取值 18-29、30-39、40-49、50-59、60-69、70+；sex 取值 female、male。"""
+
+
+def chat_system(mode: str, units: list[dict]) -> str:
+    parts = [COMMON_RULES, CHAT_SCOPE]
+    if mode == "conservative":
+        parts.append(CHAT_UNKNOWN_MED)
+    parts += [knowledge_block(units), CHAT_SCHEMA]
+    return "\n\n".join(parts)
+
+
+def chat_user(history: list[dict], message: str, known: dict, forbid_topics: list[str], feedback: list[str] | None = None) -> str:
+    parts = []
+    if history:
+        parts.append("最近的对话：\n" + "\n".join(f"{'用户' if h['role']=='user' else '助手'}：{h['content']}" for h in history))
+    if known:
+        parts.append("已知的用户信息：" + json.dumps(known, ensure_ascii=False))
+    parts.append("用户刚刚说：" + message)
+    if forbid_topics:
+        parts.append("用户提到了需要回避的话题：" + "、".join(forbid_topics) + "。不要就此给出建议。")
+    if feedback:
+        parts.append("上一次输出未通过检查，请修正以下问题后重新输出：" + "；".join(feedback))
+    return "\n".join(parts)
+
+
 def knowledge_block(units: list[dict]) -> str:
     lines = ["知识片段（雏形阶段均为待审核，仅内部演示）："]
     for u in units:

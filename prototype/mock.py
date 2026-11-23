@@ -8,7 +8,7 @@ QUANT = "碗个份片块杯瓶拳勺两半把盘根只条袋颗"
 
 def _all_meal_text(ctx: dict) -> str:
     d = ctx.get("diet_log", {})
-    parts = []
+    parts = [d.get("free_text", "")] if d.get("free_text") else []
     for m in d.get("meals", []):
         parts += [it.get("food", "") for it in m.get("items", [])]
     parts += d.get("beverages", [])
@@ -16,10 +16,38 @@ def _all_meal_text(ctx: dict) -> str:
 
 
 def respond(kind: str, ctx: dict) -> dict:
+    if kind == "chat":
+        return _chat(ctx)
     return _clarify(ctx) if kind == "clarify" else _advice(ctx)
 
 
+def _chat(ctx: dict) -> dict:
+    units = ctx.get("units", [])
+    if units:
+        u = units[0]
+        reply = f"（演示模式）关于「{u['topic']}」：{u['core']}"[:170]
+        sources = [u["id"]]
+    else:
+        reply = "（演示模式）这个问题我需要查更多资料才能回答得稳妥。"
+        sources = []
+    return {
+        "reply": reply,
+        "follow_up": "你平时最困扰的是哪一餐？",
+        "quick_replies": ["早餐", "午餐", "晚餐"],
+        "slot_updates": {},
+        "sources": sources,
+    }
+
+
 def _clarify(ctx: dict) -> dict:
+    free = ctx.get("diet_log", {}).get("free_text")
+    if free:
+        qs = []
+        if not re.search(f"[{QUANT}]", free):
+            qs.append({"id": "q1", "text": "每餐大概吃了多少？可以用拳头、碗或几个来表示。"})
+        if re.search("奶茶|茶饮|饮料|果汁|可乐", free):
+            qs.append({"id": f"q{len(qs)+1}", "text": "奶茶或饮料一般是全糖、半糖还是无糖？一周大概几次？"})
+        return {"questions": qs[:3]}
     qs = []
     for m in ctx.get("diet_log", {}).get("meals", []):
         text = "；".join(it.get("food", "") for it in m.get("items", []))

@@ -88,6 +88,34 @@ def check(advice: dict, mode: str) -> list[str]:
     return sorted(set(violations))
 
 
+def check_text(text: str, mode: str) -> list[str]:
+    """对普通回答文本做同样的硬性检查（不要求结构化字段和固定提示）。"""
+    violations: list[str] = []
+    for w in BANNED:
+        if w in text:
+            violations.append(f"禁用词：{w}")
+    for w in IDENTITY:
+        if w in text:
+            violations.append(f"自称身份：{w}")
+    for p in DOSE_PATTERNS:
+        if re.search(p, text):
+            violations.append("涉及药物剂量或调整")
+    for p in GRAM_PATTERNS:
+        if re.search(p, text):
+            violations.append("给出精确克数或热量")
+    if mode == "conservative":
+        for m in re.finditer(CONSERVATIVE_BAD, text):
+            if not _negated(text, m.start()):
+                violations.append(f"保守模式下不应建议：{m.group(0)}")
+    return sorted(set(violations))
+
+
+CHAT_FALLBACK = (
+    "这个问题我不太确定怎么回答才稳妥。建议你把具体情况告诉营养师或医生。"
+    "你也可以换个问法，或者让我帮你看看你一天的饮食。"
+)
+
+
 def ensure_note(advice: dict, mode: str) -> dict:
     """补全必要提示（不属于违规，只是兜底补充）。"""
     note = advice.get("note", "") or ""

@@ -14,7 +14,7 @@ import jsonschema
 from fastapi import Body, FastAPI, HTTPException
 from fastapi.responses import FileResponse
 
-from . import guard, knowledge, llm, prompts, rules
+from . import chat, guard, knowledge, llm, prompts, rules
 
 BASE = pathlib.Path(__file__).resolve().parent
 DATA = BASE / "data"
@@ -148,6 +148,37 @@ def _require(p: dict) -> tuple[str, dict]:
 @app.get("/")
 def index():
     return FileResponse(BASE / "static" / "index.html")
+
+
+@app.get("/form")
+def form():
+    """原问卷式流程，保留作对照。"""
+    return FileResponse(BASE / "static" / "form.html")
+
+
+@app.post("/api/chat")
+def api_chat(payload: dict = Body(...)):
+    return chat.handle(payload)
+
+
+@app.post("/api/chat/profile")
+def api_chat_profile(payload: dict = Body(...)):
+    """对话式入口的档案预览或保存。"""
+    s = chat.normalize(payload.get("state"))
+    confirmed = bool(payload.get("confirmed"))
+    try:
+        doc = chat.build_doc(s, confirmed, payload.get("interest", {}))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    try:
+        uuid.UUID(doc["session_id"])
+    except ValueError:
+        raise HTTPException(400, "无效的会话标识")
+    _validate(doc)
+    if confirmed:
+        DATA.mkdir(exist_ok=True)
+        (DATA / f"{doc['session_id']}.json").write_text(json.dumps(doc, ensure_ascii=False, indent=2), encoding="utf-8")
+    return {"saved": confirmed, "profile": doc}
 
 
 @app.get("/api/health")

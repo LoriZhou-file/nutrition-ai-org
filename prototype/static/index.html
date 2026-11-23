@@ -5,303 +5,190 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>SeekNutri 控糖助手（雏形）</title>
 <style>
-:root{--bg:#f6f8f6;--card:#fff;--ink:#1c2a22;--sub:#5d6b63;--line:#dde5df;--brand:#2f7d5b;--brand-ink:#fff;--soft:#e8f3ec;--warn:#8a5a00;--warn-bg:#fff4dc;--red:#a12f2f;--red-bg:#fdeaea}
-@media (prefers-color-scheme:dark){:root{--bg:#121816;--card:#1b2420;--ink:#e8efe9;--sub:#a3b1a9;--line:#2c3a33;--brand:#58b88a;--brand-ink:#0d1a13;--soft:#1f3328;--warn:#f0c46a;--warn-bg:#352a10;--red:#f19a9a;--red-bg:#3a1c1c}}
+:root{--bg:#f6f8f6;--card:#fff;--ink:#1c2a22;--sub:#5d6b63;--line:#dde5df;--brand:#2f7d5b;--brand-ink:#fff;--soft:#e8f3ec;--warn:#8a5a00;--warn-bg:#fff4dc;--red:#a12f2f;--red-bg:#fdeaea;--user:#2f7d5b}
+@media (prefers-color-scheme:dark){:root{--bg:#121816;--card:#1b2420;--ink:#e8efe9;--sub:#a3b1a9;--line:#2c3a33;--brand:#58b88a;--brand-ink:#0d1a13;--soft:#1f3328;--warn:#f0c46a;--warn-bg:#352a10;--red:#f19a9a;--red-bg:#3a1c1c;--user:#58b88a}}
 *{box-sizing:border-box}
+html,body{height:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
-.wrap{max-width:480px;margin:0 auto;padding:0 16px calc(32px + env(safe-area-inset-bottom))}
-header{padding:16px 0 8px;display:flex;align-items:center;justify-content:space-between}
+.app{max-width:520px;margin:0 auto;height:100dvh;display:flex;flex-direction:column}
+header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:space-between;flex:none}
 .brand{font-weight:600;font-size:17px}.brand small{font-weight:400;color:var(--sub);margin-left:6px}
-.bar{height:4px;background:var(--line);border-radius:2px;overflow:hidden;margin-bottom:12px}.bar i{display:block;height:100%;width:0;background:var(--brand);transition:width .25s}
-.demo{background:var(--warn-bg);color:var(--warn);border-radius:8px;padding:8px 12px;font-size:13px;margin-bottom:12px}
-section{display:none}section.on{display:block}
-h1{font-size:22px;margin:8px 0 6px;font-weight:600}h2{font-size:18px;margin:4px 0 4px;font-weight:600}
-p.sub{color:var(--sub);margin:0 0 14px;font-size:14px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
-label.f{display:block;font-size:14px;color:var(--sub);margin:12px 0 4px}label.f:first-child{margin-top:0}
-input[type=text],input[type=number],input[type=date],select,textarea{width:100%;font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
-textarea{min-height:76px;resize:vertical}
-input:focus,select:focus,textarea:focus{outline:2px solid var(--brand);outline-offset:0}
-.row{display:flex;gap:10px}.row>*{flex:1}
-.chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 12px;font-size:14px;cursor:pointer;user-select:none}
-.chip.on{background:var(--soft);border-color:var(--brand);color:var(--brand)}
-.yn{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}.yn:last-child{border:0}
-.yn .seg{display:flex;gap:6px;flex:none}
-.seg button{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:6px 14px;font:inherit;font-size:14px}
-.seg button.on{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
-button.btn{width:100%;background:var(--brand);color:var(--brand-ink);border:0;border-radius:10px;padding:13px;font:inherit;font-weight:600;margin-top:8px;cursor:pointer}
-button.btn.ghost{background:transparent;color:var(--brand);border:1px solid var(--brand)}
-button.btn:disabled{opacity:.5}
-.err{color:var(--red);font-size:13px;margin-top:6px;min-height:1px}
-.chk{display:flex;gap:10px;align-items:flex-start;font-size:14px}.chk input{margin-top:5px}
-.tag{display:inline-block;font-size:12px;background:var(--soft);color:var(--brand);border-radius:6px;padding:1px 8px;margin-left:6px;vertical-align:middle}
-.item{border-left:3px solid var(--brand);padding:2px 0 2px 12px;margin:14px 0}.item b{display:block}
-.item .k{color:var(--sub);font-size:13px}
-.notice{background:var(--warn-bg);color:var(--warn);border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:14px}
-.stop{background:var(--red-bg);color:var(--red);border-radius:12px;padding:16px;font-size:16px}
-.kv{display:grid;grid-template-columns:96px 1fr;gap:6px 10px;font-size:14px}.kv dt{color:var(--sub)}.kv dd{margin:0}
+.eng{font-size:12px;color:var(--sub)}
+.demo{margin:0 16px 6px;background:var(--warn-bg);color:var(--warn);border-radius:8px;padding:6px 10px;font-size:12px;flex:none}
+#log{flex:1;overflow-y:auto;padding:8px 16px 12px}
+.m{max-width:88%;margin:10px 0;padding:10px 13px;border-radius:14px;white-space:pre-wrap;word-break:break-word}
+.m.a{background:var(--card);border:1px solid var(--line);border-top-left-radius:4px}
+.m.u{background:var(--user);color:var(--brand-ink);margin-left:auto;border-top-right-radius:4px}
+.m.n{background:var(--warn-bg);color:var(--warn);font-size:14px}
+.m.s{background:var(--red-bg);color:var(--red);max-width:100%}
+.m.wide{max-width:100%;width:100%}
+.src{font-size:12px;color:var(--sub);margin:-4px 0 6px 4px}
+.hello h1{font-size:20px;margin:0 0 4px;font-weight:600}.hello p{margin:0;color:var(--sub);font-size:14px}
+.gate{background:var(--card);border:1px solid var(--brand);border-radius:12px;padding:12px;margin:10px 0}
+.gate p{margin:0 0 10px;font-size:15px}.gate .opts{display:flex;flex-wrap:wrap;gap:8px}
+.opt{border:1px solid var(--brand);background:transparent;color:var(--brand);border-radius:999px;padding:7px 14px;font:inherit;font-size:14px;cursor:pointer}
+.opt:disabled{opacity:.45;cursor:default}.opt.picked{background:var(--brand);color:var(--brand-ink);opacity:1}
+.item{border-left:3px solid var(--brand);padding:2px 0 2px 12px;margin:12px 0}.item b{display:block}.item .k{color:var(--sub);font-size:13px}
+.tag{display:inline-block;font-size:12px;background:var(--soft);color:var(--brand);border-radius:6px;padding:1px 8px;margin-left:6px}
 .small{font-size:12px;color:var(--sub)}
-.dots{display:inline-block;animation:b 1s infinite}@keyframes b{50%{opacity:.3}}
+.kv{display:grid;grid-template-columns:84px 1fr;gap:6px 10px;font-size:14px;margin:0 0 10px}.kv dt{color:var(--sub)}.kv dd{margin:0}
+.chk{display:flex;gap:8px;align-items:flex-start;font-size:14px;margin:8px 0}.chk input{margin-top:5px}
+.row-in{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-top:6px}
+.btn{background:var(--brand);color:var(--brand-ink);border:0;border-radius:10px;padding:10px 16px;font:inherit;font-weight:600;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--brand);border:1px solid var(--brand)}.btn:disabled{opacity:.5}
+.dots span{display:inline-block;width:6px;height:6px;margin-right:4px;border-radius:50%;background:var(--sub);animation:b 1s infinite}.dots span:nth-child(2){animation-delay:.15s}.dots span:nth-child(3){animation-delay:.3s}
+@keyframes b{50%{opacity:.25}}
+footer{flex:none;border-top:1px solid var(--line);background:var(--bg);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
+#chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none}#chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 12px;font-size:14px;cursor:pointer;color:var(--ink)}
+.chip.main{border-color:var(--brand);color:var(--brand)}
+.inbar{display:flex;gap:8px;align-items:flex-end}
+#inp{flex:1;font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;resize:none;max-height:120px;min-height:44px}
+#inp:focus{outline:2px solid var(--brand)}
+#send{flex:none;height:44px;padding:0 16px}
+.note{font-size:11px;color:var(--sub);text-align:center;margin-top:6px}
 </style>
 </head>
 <body>
-<div class="wrap">
-<header><div class="brand">SeekNutri<small>控糖助手</small></div><span class="small" id="engine"></span></header>
-<div class="bar"><i id="bar"></i></div>
-<div class="demo">雏形演示：知识内容尚未经营养师审核，风险规则的关键词为演示用，请勿对外使用。</div>
-
-<!-- 0 同意 -->
-<section id="s0" class="on">
-  <h1>看看你的一天饮食，哪里最值得先改</h1>
-  <p class="sub">回答几个问题，填写你一天吃了什么，我们会给出针对你实际饮食的调整建议。大约 3–5 分钟。</p>
-  <div class="card">
-    <p style="margin:0 0 8px"><b>请先了解</b></p>
-    <ul style="margin:0 0 10px;padding-left:20px;font-size:14px;color:var(--sub)">
-      <li>我是 AI 营养助手，不是医生或营养师，不做诊断，也不涉及药物调整。</li>
-      <li>只收集和饮食、血糖相关的信息，不要求姓名和手机号。</li>
-      <li>你可以随时查看、修改、删除你填写的内容。</li>
-      <li>内容由 AI 生成，仅作一般性生活方式参考。</li>
-    </ul>
-    <label class="chk"><input type="checkbox" id="consent"><span>我已阅读并同意提供健康相关信息，用于生成饮食建议。</span></label>
-    <div class="err" id="e0"></div>
-  </div>
-  <button class="btn" id="b0">开始</button>
-</section>
-
-<!-- 1 筛查 -->
-<section id="s1">
-  <h2>先确认几件事</h2>
-  <p class="sub">为了安全，有些情况需要由医生或营养师当面指导。</p>
-  <div class="card" id="screenList"></div>
-  <div class="err" id="e1"></div>
-  <button class="btn" id="b1">下一步</button>
-</section>
-
-<!-- 2 基础 -->
-<section id="s2">
-  <h2>基本情况</h2>
-  <div class="card">
-    <div class="row"><div><label class="f">年龄段</label><select id="age"><option value="">请选择</option><option>18-29</option><option>30-39</option><option>40-49</option><option>50-59</option><option>60-69</option><option>70+</option></select></div>
-    <div><label class="f">性别</label><select id="sex"><option value="">请选择</option><option value="female">女</option><option value="male">男</option><option value="prefer_not_to_say">不愿透露</option></select></div></div>
-    <div class="row"><div><label class="f">身高（cm）</label><input type="number" id="height" inputmode="decimal" min="100" max="230"></div>
-    <div><label class="f">体重（kg）</label><input type="number" id="weight" inputmode="decimal" min="30" max="250"></div></div>
-    <label class="f">腰围（cm，可选）</label><input type="number" id="waist" inputmode="decimal" min="40" max="200">
-  </div>
-  <div class="err" id="e2"></div>
-  <button class="btn" id="b2">下一步</button>
-</section>
-
-<!-- 3 血糖与用药 -->
-<section id="s3">
-  <h2>血糖和用药情况</h2>
-  <p class="sub">只需要告诉我们大类，不需要填写药量。</p>
-  <div class="card">
-    <label class="f">是否被医生诊断过糖尿病或血糖异常</label>
-    <select id="diag"><option value="">请选择</option><option value="yes">是</option><option value="no">否，只是体检指标偏高</option><option value="unsure">不确定</option></select>
-    <label class="f">目前是否在使用降糖药物</label>
-    <select id="drug"><option value="">请选择</option><option value="no">没有使用</option><option value="oral">口服药</option><option value="insulin">胰岛素</option><option value="oral_and_insulin">口服药和胰岛素</option><option value="unsure">不确定</option></select>
-    <label class="f">最近一次血糖相关指标（可选）</label>
-    <div class="row"><select id="itype"><option value="fasting_glucose">空腹血糖</option><option value="postprandial_glucose">餐后血糖</option><option value="hba1c">糖化血红蛋白</option></select>
-    <input type="number" id="ival" step="0.1" placeholder="数值"></div>
-    <div class="row" style="margin-top:8px"><select id="iunit"><option>mmol/L</option><option>%</option></select><input type="date" id="idate"></div>
-    <label class="f">最近有没有不舒服的情况（可选）</label>
-    <textarea id="symptoms" placeholder="比如心慌、头晕、口渴……没有可以不填"></textarea>
-    <label class="f">你最想解决什么问题（可多选）</label>
-    <div class="chips" id="concernChips"></div>
-    <input type="text" id="concernText" placeholder="还有别的想说的？（可选）" style="margin-top:8px">
-  </div>
-  <div class="err" id="e3"></div>
-  <button class="btn" id="b3">下一步</button>
-</section>
-
-<!-- 4 饮食 -->
-<section id="s4">
-  <h2>你一天吃了什么</h2>
-  <p class="sub">像平时聊天一样写就行，尽量带上份量，比如“一碗”“两个”“一拳头”。</p>
-  <div class="card">
-    <label class="f">早餐</label><textarea id="d_b" placeholder="例如：白粥一碗，咸菜，一根油条"></textarea>
-    <label class="f">午餐</label><textarea id="d_l" placeholder="例如：外卖盖饭，米饭一盒，配一点青菜"></textarea>
-    <label class="f">晚餐</label><textarea id="d_d" placeholder="例如：面条一大碗，几片肉"></textarea>
-    <label class="f">晚餐大概几点（可选）</label><input type="text" id="d_dt" placeholder="例如 19:30">
-    <label class="f">加餐、零食</label><textarea id="d_s" placeholder="没有可以不填"></textarea>
-    <label class="f">饮料</label><input type="text" id="d_bev" placeholder="例如：一杯奶茶，一瓶甜茶饮">
-    <label class="f">这是典型的一天吗</label>
-    <select id="d_typ"><option value="true">是，差不多每天这样</option><option value="false">不是，今天比较特殊</option></select>
-    <label class="f">平时外食的频率</label>
-    <select id="d_out"><option value="unknown">不确定</option><option value="rarely">很少</option><option value="sometimes">有时</option><option value="often">经常</option></select>
-    <label class="f">运动</label>
-    <select id="act"><option value="unknown">不确定</option><option value="low">很少活动</option><option value="moderate">每周几次</option><option value="high">经常运动</option></select>
-    <label class="f">睡眠</label>
-    <select id="sleep"><option value="unknown">不确定</option><option value="<6">少于 6 小时</option><option value="6-7">6–7 小时</option><option value="7-8">7–8 小时</option><option value=">8">超过 8 小时</option></select>
-  </div>
-  <div class="err" id="e4"></div>
-  <button class="btn" id="b4">生成建议</button>
-</section>
-
-<!-- 5 追问 -->
-<section id="s5">
-  <h2>再确认几个细节</h2>
-  <p class="sub">这些信息会让建议更贴近你的实际情况，不确定可以留空。</p>
-  <div class="card" id="qList"></div>
-  <button class="btn" id="b5">看建议</button>
-</section>
-
-<!-- 6 建议 -->
-<section id="s6">
-  <h2>你的控糖饮食小结<span class="tag">AI 生成</span></h2>
-  <div id="notices"></div>
-  <div class="card" id="advice"></div>
-  <p class="small" id="srcs"></p>
-  <button class="btn" id="b6">查看并确认我的档案</button>
-  <button class="btn ghost" id="b6b">返回修改饮食</button>
-</section>
-
-<!-- 7 档案 -->
-<section id="s7">
-  <h2>确认你的档案</h2>
-  <p class="sub">这是我们整理的内容，如有不对请返回修改。</p>
-  <div class="card"><dl class="kv" id="profileKv"></dl></div>
-  <div class="card">
-    <label class="chk"><input type="checkbox" id="interest"><span>调整饮食最难的是坚持。如果你想了解有营养师带着你坚持一段时间，可以留个意向，我们会先和营养师团队把方案想清楚，再通知你。（不收费，不绑定购买）</span></label>
-    <input type="text" id="interestNote" placeholder="你最希望得到什么帮助？（可选）" style="margin-top:10px">
-  </div>
-  <button class="btn" id="b7">确认档案</button>
-  <button class="btn ghost" id="b7b">返回修改基本信息</button>
-</section>
-
-<!-- 8 完成 -->
-<section id="s8">
-  <h2>已保存</h2>
-  <div class="card"><p style="margin:0">你的档案已保存。如果你不希望保留，可以随时删除。</p></div>
-  <button class="btn ghost" id="bdel">删除我的全部数据</button>
-  <div class="err" id="e8"></div>
-</section>
-
-<!-- 红 / 转介 -->
-<section id="sred">
-  <div class="stop" id="redMsg"></div>
-  <p class="small" style="margin-top:12px">本工具不能替代医生。</p>
-</section>
+<div class="app">
+  <header><div class="brand">SeekNutri<small>控糖助手</small></div><span class="eng" id="eng"></span></header>
+  <div class="demo">雏形演示：知识未经营养师审核，风险关键词为演示用，请勿对外使用。</div>
+  <div id="log" aria-live="polite"></div>
+  <footer>
+    <div id="chips"></div>
+    <div class="inbar"><textarea id="inp" rows="1" placeholder="说说你想了解什么，比如：血糖高还能吃水果吗？"></textarea><button class="btn" id="send">发送</button></div>
+    <div class="note">我是 AI 营养助手，不是医生或营养师；内容由 AI 生成，仅作一般性参考。请不要输入姓名、手机号。</div>
+  </footer>
 </div>
 
 <script>
-const $ = id => document.getElementById(id);
-const S = {session_id: (crypto.randomUUID ? crypto.randomUUID() : '00000000-0000-4000-8000-' + Date.now().toString().padStart(12,'0').slice(-12)),
-  screening:{}, answers:[], concerns:[], last:null};
-const STEP = {s0:0,s1:1,s2:2,s3:3,s4:4,s5:5,s6:6,s7:7,s8:8};
-function show(id){document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id===id));
-  $('bar').style.width = (STEP[id]!=null? Math.round(STEP[id]/8*100):100)+'%'; window.scrollTo(0,0);}
-async function api(path, body, method='POST'){
-  const r = await fetch(path,{method,headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
-  if(!r.ok){let m='请求失败';try{m=(await r.json()).detail||m}catch(e){} throw new Error(m);}
-  return r.json();
+const $=id=>document.getElementById(id);
+const uid=()=> (crypto.randomUUID?crypto.randomUUID():'00000000-0000-4000-8000-'+Date.now().toString().padStart(12,'0').slice(-12));
+let STATE={session_id:uid()}, HISTORY=[], BUSY=false, LAST_STAGE=null;
+const EXAMPLES=['血糖高还能吃水果吗','主食怎么吃血糖更稳','晚上总想吃东西怎么办','经常吃外卖怎么选','为什么体重没变腰围变大了'];
+
+function el(tag,cls,text){const e=document.createElement(tag); if(cls)e.className=cls; if(text!=null)e.textContent=text; return e;}
+function scroll(){const l=$('log'); l.scrollTop=l.scrollHeight;}
+function bubble(kind,text){const b=el('div','m '+kind,text); $('log').appendChild(b); scroll(); return b;}
+function setChips(list){ // list: [{label, send|action}]
+  const c=$('chips'); c.replaceChildren();
+  list.forEach(x=>{const b=el('button','chip'+(x.main?' main':''),x.label); b.type='button'; b.onclick=()=>{ if(x.action) act(x.action,x.label); else say(x.send||x.label); }; c.appendChild(b);});
 }
-function el(tag, cls, text){const e=document.createElement(tag); if(cls)e.className=cls; if(text!=null)e.textContent=text; return e;}
-function busy(btn, on, label){btn.disabled=on; if(label!=null) btn.textContent=label;}
-
-fetch('/api/health').then(r=>r.json()).then(h=>{$('engine').textContent = h.engine==='mock' ? '演示模式（未接入大模型）' : '模型：'+h.engine;}).catch(()=>{});
-
-// ---- 0
-$('b0').onclick=()=>{ if(!$('consent').checked){$('e0').textContent='需要先勾选同意才能继续';return;} $('e0').textContent=''; show('s1'); };
-
-// ---- 1 筛查
-const SCREEN=[['adult','你是否已满 18 岁？',true],['pregnant_or_lactating','你目前是否处于孕期或哺乳期？',false],
- ['type1_diabetes','你是否是 1 型糖尿病？',false],['severe_kidney_or_eating_disorder','你是否有严重肾病，或有进食障碍（如催吐、暴食）？',false]];
-SCREEN.forEach(([k,q])=>{const row=el('div','yn'); row.appendChild(el('span',null,q)); const seg=el('div','seg');
-  [['是',true],['否',false]].forEach(([t,v])=>{const b=el('button',null,t); b.type='button'; b.onclick=()=>{S.screening[k]=v; [...seg.children].forEach(x=>x.classList.remove('on')); b.classList.add('on');}; seg.appendChild(b);});
-  row.appendChild(seg); $('screenList').appendChild(row);});
-$('b1').onclick=async()=>{
-  if(SCREEN.some(([k])=>S.screening[k]===undefined)){$('e1').textContent='请逐项选择';return;} $('e1').textContent='';
-  try{const r=await api('/api/screen',{screening:S.screening}); if(r.referred){$('redMsg').textContent=r.message; show('sred'); return;} show('s2');}catch(e){$('e1').textContent=e.message;}
-};
-
-// ---- 2
-$('b2').onclick=()=>{
-  const h=+$('height').value,w=+$('weight').value;
-  if(!$('age').value||!$('sex').value||!(h>=100&&h<=230)||!(w>=30&&w<=250)){$('e2').textContent='请填写年龄段、性别，以及合理范围内的身高体重';return;}
-  $('e2').textContent=''; show('s3');
-};
-
-// ---- 3
-['体重管理','血糖偏高怎么吃','外食怎么选','主食怎么吃','零食和饮料','不知道从哪里开始'].forEach(t=>{
-  const c=el('span','chip',t); c.onclick=()=>{c.classList.toggle('on'); S.concerns = [...document.querySelectorAll('#concernChips .chip.on')].map(x=>x.textContent);}; $('concernChips').appendChild(c);});
-$('b3').onclick=()=>{
-  if(!$('diag').value||!$('drug').value){$('e3').textContent='请选择是否被诊断，以及是否使用降糖药物';return;}
-  $('e3').textContent=''; show('s4');
-};
-
-// ---- profile 组装
-function profile(){
-  const ind = $('ival').value && $('idate').value ? {type:$('itype').value,value:+$('ival').value,unit:$('iunit').value,measured_on:$('idate').value} : null;
-  return {session_id:S.session_id, source:'prototype', consent:{health_data:true}, screening:S.screening,
-    basic:{age_band:$('age').value, sex:$('sex').value, height_cm:+$('height').value, weight_kg:+$('weight').value, waist_cm:$('waist').value?+$('waist').value:null},
-    glycemic:{diagnosed:$('diag').value, uses_glucose_lowering_drug:$('drug').value, indicator:ind},
-    symptoms_text:$('symptoms').value, concerns:S.concerns, concerns_text:$('concernText').value,
-    diet:{breakfast:$('d_b').value,lunch:$('d_l').value,dinner:$('d_d').value,dinner_time:$('d_dt').value,snack:$('d_s').value,beverages:$('d_bev').value,
-      typical_day:$('d_typ').value==='true', eating_out_frequency:$('d_out').value},
-    lifestyle:{activity:$('act').value, sleep_hours_band:$('sleep').value}};
+function defaultChips(extra){
+  const base=[]; if(extra) extra.forEach(t=>base.push({label:t}));
+  if(STATE.referred||STATE.blocked) return setChips(base);
+  base.push({label:STATE.advice_done?'再分析一天饮食':'帮我分析一天饮食',main:true,action:{type:'want_personal'}});
+  if(STATE.advice_done) base.push({label:'整理我的档案',main:true,action:{type:'profile'}});
+  setChips(base);
 }
-function showStop(r){$('redMsg').replaceChildren(); r.messages.forEach(m=>$('redMsg').appendChild(el('p',null,m))); show('sred');}
+function welcome(){
+  const w=el('div','m a wide hello'); w.appendChild(el('h1',null,'你好，我是 AI 营养助手')); w.appendChild(el('p',null,'关于控糖和饮食，你最想问什么？直接写下来就行，也可以点下面的例子。')); $('log').appendChild(w);
+  setChips([...EXAMPLES.map(t=>({label:t})),{label:'帮我分析一天饮食',main:true,action:{type:'want_personal'}}]);
+}
 
-// ---- 4 → 追问
-$('b4').onclick=async()=>{
-  const p=profile(); if(!(p.diet.breakfast+p.diet.lunch+p.diet.dinner+p.diet.snack).trim()){$('e4').textContent='请至少填写一餐';return;}
-  $('e4').textContent=''; busy($('b4'),true,'正在分析…');
+async function call(body){
+  BUSY=true; $('send').disabled=true;
+  const t=el('div','m a'); const d=el('span','dots'); for(let i=0;i<3;i++)d.appendChild(el('span')); t.appendChild(d); $('log').appendChild(t); scroll();
   try{
-    const r=await api('/api/clarify',{profile:p});
-    if(r.stop){showStop(r);return;}
-    S.answers=[]; $('qList').replaceChildren();
-    if(!r.questions.length){await getAdvice(); return;}
-    r.questions.forEach(q=>{$('qList').appendChild(el('label','f',q.text)); const i=el('input'); i.type='text'; i.dataset.q=q.text; $('qList').appendChild(i);});
-    show('s5');
-  }catch(e){$('e4').textContent=e.message;} finally{busy($('b4'),false,'生成建议');}
-};
-$('b5').onclick=async()=>{
-  S.answers=[...document.querySelectorAll('#qList input')].filter(i=>i.value.trim()).map(i=>({q:i.dataset.q,a:i.value.trim()}));
-  busy($('b5'),true,'正在生成建议…'); try{await getAdvice();}catch(e){alert(e.message);} finally{busy($('b5'),false,'看建议');}
-};
+    const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({state:STATE,history:HISTORY.slice(-8),...body})});
+    if(!r.ok) throw new Error('请求失败');
+    const j=await r.json(); STATE=j.state; t.remove(); render(j.events);
+  }catch(e){t.remove(); bubble('n','网络或服务出了点问题，请稍后再试。');}
+  finally{BUSY=false; $('send').disabled=false; $('inp').focus();}
+}
 
-// ---- 6 建议
-async function getAdvice(){
-  const r=await api('/api/advice',{profile:profile(),answers:S.answers});
-  if(r.stop){showStop(r);return;}
-  S.last=r; const a=r.advice, box=$('advice'); box.replaceChildren();
-  $('notices').replaceChildren(); r.notices.forEach(n=>$('notices').appendChild(el('div','notice',n.message)));
+function say(text){ if(BUSY||!text.trim())return; bubble('u',text); HISTORY.push({role:'user',content:text}); $('inp').value=''; grow(); setChips([]); call({message:text}); }
+function act(action,label){ if(BUSY)return; if(label) bubble('u',label); setChips([]);
+  if(action.type==='profile'){ showProfile(); return; }
+  call({action}); }
+
+function advicePlaceholder(){ $('inp').placeholder = STATE.stage==='awaiting_diet' ? '例如：早餐白粥一碗、咸菜；午餐外卖盖饭……' : STATE.stage==='awaiting_clarify' ? '直接回答上面的问题就行' : '说说你想了解什么，比如：血糖高还能吃水果吗？'; }
+
+function render(events){
+  let chips=null, extraQuick=null;
+  events.forEach(e=>{
+    if(e.type==='text') bubble('a',e.text);
+    else if(e.type==='notice') bubble('n',e.text);
+    else if(e.type==='stop'){const b=el('div','m s'); e.messages.forEach(m=>b.appendChild(el('p',null,m))); b.lastChild.style.margin=0; $('log').appendChild(b); chips=[];}
+    else if(e.type==='referred'){bubble('s',e.text); chips=[];}
+    else if(e.type==='answer'){
+      bubble('a',e.text+(e.follow_up?'\n\n'+e.follow_up:'')); HISTORY.push({role:'assistant',content:e.text+(e.follow_up?' '+e.follow_up:'')});
+      if(e.sources&&e.sources.length) $('log').appendChild(el('div','src','依据（待审核）：'+e.sources.map(s=>s.id+' '+s.topic).join('；')));
+      if(e.guard&&e.guard.fallback) $('log').appendChild(el('div','src','（回答未通过安全检查，已使用保守回复）'));
+      extraQuick=e.quick_replies||[];
+    }
+    else if(e.type==='gate') renderGate(e);
+    else if(e.type==='ask_diet') bubble('a',e.text);
+    else if(e.type==='clarify'){ bubble('a','再确认几个细节，会让建议更贴近你的实际情况（不确定可以直接说不确定）：\n'+e.questions.map((q,i)=>(i+1)+'. '+q).join('\n')); }
+    else if(e.type==='advice') renderAdvice(e);
+  });
+  advicePlaceholder();
+  if(window.__keepTop){window.__keepTop=false;} else scroll();
+  if(STATE.referred) return setChips([]);
+  if(events.some(e=>e.type==='stop')) return setChips([]);
+  if(events.some(e=>e.type==='gate')) return setChips([]);
+  if(STATE.stage) return setChips([]);
+  defaultChips(extraQuick);
+}
+
+function renderGate(g){
+  const box=el('div','gate'); box.appendChild(el('p',null,g.text)); const o=el('div','opts');
+  g.options.forEach(op=>{const b=el('button','opt',op.label); b.type='button';
+    b.onclick=()=>{ if(BUSY)return; [...o.children].forEach(x=>x.disabled=true); b.classList.add('picked'); call({action:{type:'gate_answer',key:g.key,value:op.value}}); };
+    o.appendChild(b);});
+  box.appendChild(o); $('log').appendChild(box);
+}
+
+function renderAdvice(e){
+  const a=e.advice, box=el('div','m a wide');
+  const h=el('div',null,''); h.appendChild(el('b',null,'你的控糖饮食小结')); h.appendChild(el('span','tag','AI 生成')); box.appendChild(h);
+  e.notices.forEach(n=>box.appendChild(el('p','small',n.message)));
   box.appendChild(el('p',null,a.overview));
   a.top3.forEach((t,i)=>{const d=el('div','item'); d.appendChild(el('b',null,(i+1)+'. '+t.finding)); d.appendChild(el('div','k','为什么：'+t.why)); d.appendChild(el('div',null,'怎么改：'+t.how)); box.appendChild(d);});
-  if(a.good&&a.good.length){box.appendChild(el('p',null,'做得好的：'+a.good.join('；')));}
-  if(a.missing_info&&a.missing_info.length){box.appendChild(el('p','small','需要说明：'+a.missing_info.join('；')));}
+  if(a.good&&a.good.length) box.appendChild(el('p',null,'做得好的：'+a.good.join('；')));
+  if(a.missing_info&&a.missing_info.length) box.appendChild(el('p','small','需要说明：'+a.missing_info.join('；')));
   box.appendChild(el('p','small',a.note));
-  $('srcs').textContent = r.sources.length ? '依据（待审核）：'+r.sources.map(s=>s.id+' '+s.topic).join('；') : (r.guard.fallback?'本次使用通用建议（模型输出未通过安全检查）':'');
-  show('s6');
+  if(e.sources.length) box.appendChild(el('p','small','依据（待审核）：'+e.sources.map(s=>s.id+' '+s.topic).join('；')));
+  if(e.guard.fallback) box.appendChild(el('p','small','本次使用通用建议（模型输出未通过安全检查）'));
+  $('log').appendChild(box);
+  box.scrollIntoView({block:'start'});
+  const tail=el('div','m a','调整饮食最难的是坚持。你可以继续问我别的问题，也可以点“整理我的档案”，看看我记下了什么。'); $('log').appendChild(tail);
+  window.__keepTop=true;
 }
-$('b6b').onclick=()=>show('s4');
 
-// ---- 7 档案
-$('b6').onclick=async()=>{
-  try{const r=await api('/api/profile',{profile:profile(),answers:S.answers}); renderKv(r.profile); show('s7');}catch(e){alert(e.message);}
-};
-const L={breakfast:'早餐',lunch:'午餐',dinner:'晚餐',snack:'加餐'},DRUG={no:'没有使用',oral:'口服药',insulin:'胰岛素',oral_and_insulin:'口服药和胰岛素',unsure:'不确定'},DIAG={yes:'是',no:'否',unsure:'不确定'};
-function renderKv(d){
-  const kv=$('profileKv'); kv.replaceChildren();
-  const add=(k,v)=>{kv.appendChild(el('dt',null,k)); kv.appendChild(el('dd',null,v));};
-  const b=d.basic; add('基本',`${b.age_band} 岁，${{female:'女',male:'男',prefer_not_to_say:'未透露'}[b.sex]}，${b.height_cm} cm / ${b.weight_kg} kg${b.bmi?'（BMI '+b.bmi+'）':''}${b.waist_cm?'，腰围 '+b.waist_cm+' cm':''}`);
-  add('诊断/用药',`${DIAG[d.glycemic.diagnosed]} / ${DRUG[d.glycemic.uses_glucose_lowering_drug]}`);
-  if(d.glycemic.recent_indicators.length){const i=d.glycemic.recent_indicators[0]; add('近期指标',`${i.value} ${i.unit}（${i.measured_on}）`);}
-  d.diet_log.meals.forEach(m=>add(L[m.meal],m.items.map(x=>x.food).join('、')+(m.time?'（'+m.time+'）':'')));
-  if(d.diet_log.beverages.length) add('饮料',d.diet_log.beverages.join('、'));
-  if(d.concerns.length) add('最想解决',d.concerns.join('、'));
+// ---- 档案
+const DRUG={no:'没有使用',oral:'口服药',insulin:'胰岛素',oral_and_insulin:'口服药和胰岛素',unsure:'不确定'};
+async function showProfile(){
+  BUSY=true;
+  try{
+    const r=await fetch('/api/chat/profile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({state:STATE})});
+    if(!r.ok) throw new Error((await r.json()).detail||'失败'); const d=(await r.json()).profile;
+    const box=el('div','m a wide'); box.appendChild(el('p',null,'这是我根据我们的对话整理的档案，不对的地方可以在对话里告诉我。'));
+    const kv=el('dl','kv'); const add=(k,v)=>{kv.appendChild(el('dt',null,k)); kv.appendChild(el('dd',null,v));};
+    const b=d.basic||{}; if(b.age_band||b.sex) add('基本',[b.age_band&&b.age_band+' 岁', {female:'女',male:'男'}[b.sex]].filter(Boolean).join('，'));
+    add('用药',DRUG[d.glycemic.uses_glucose_lowering_drug]); add('处理模式',d.mode==='conservative'?'保守（有用药或未确认）':'标准');
+    if(d.concerns.length) add('关注点',d.concerns.join('、')); if(d.diet_log.raw_text) add('一天饮食',d.diet_log.raw_text);
+    box.appendChild(kv);
+    const lab=el('label','chk'); const cb=el('input'); cb.type='checkbox'; lab.appendChild(cb); lab.appendChild(el('span',null,'我想了解有营养师带着我坚持一段时间的服务。我们会先和营养师团队把方案想清楚再通知你。（不收费，不绑定购买）')); box.appendChild(lab);
+    const note=el('input','row-in'); note.type='text'; note.placeholder='你最希望得到什么帮助？（可选）'; box.appendChild(note);
+    const row=el('div',null); row.style.marginTop='10px'; const ok=el('button','btn','确认并保存'); ok.type='button';
+    ok.onclick=async()=>{ ok.disabled=true;
+      try{const rr=await fetch('/api/chat/profile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({state:STATE,confirmed:true,interest:{coaching_interest:cb.checked,notes:note.value}})});
+        if(!rr.ok) throw new Error('保存失败'); box.replaceChildren(el('p',null,'已保存。如果你不希望保留，可以随时删除。'));
+        const del=el('button','btn ghost','删除我的全部数据'); del.type='button'; del.onclick=async()=>{ await fetch('/api/session/'+STATE.session_id,{method:'DELETE'}); box.replaceChildren(el('p',null,'已删除。')); }; box.appendChild(del);
+      }catch(err){ok.disabled=false; bubble('n',err.message);} };
+    row.appendChild(ok); box.appendChild(row); $('log').appendChild(box); scroll();
+  }catch(e){ bubble('n','现在还不能整理档案：'+e.message+'。可以先点“帮我分析一天饮食”。'); }
+  finally{BUSY=false; defaultChips(null);}
 }
-$('b7b').onclick=()=>show('s2');
-$('b7').onclick=async()=>{
-  busy($('b7'),true);
-  try{await api('/api/profile',{profile:profile(),answers:S.answers,confirmed:true,interest:{coaching_interest:$('interest').checked,notes:$('interestNote').value}}); show('s8');}
-  catch(e){alert(e.message);} finally{busy($('b7'),false);}
-};
-$('bdel').onclick=async()=>{
-  try{await api('/api/session/'+S.session_id,null,'DELETE'); $('e8').style.color='var(--brand)'; $('e8').textContent='已删除。';}catch(e){$('e8').textContent=e.message;}
-};
+
+// ---- 输入
+function grow(){const i=$('inp'); i.style.height='auto'; i.style.height=Math.min(i.scrollHeight,120)+'px';}
+$('inp').addEventListener('input',grow);
+$('inp').addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault(); say($('inp').value);} });
+$('send').onclick=()=>say($('inp').value);
+fetch('/api/health').then(r=>r.json()).then(h=>{$('eng').textContent=h.engine==='mock'?'演示模式（未接入大模型）':'模型：'+h.engine;}).catch(()=>{});
+welcome();
 </script>
 </body>
 </html>

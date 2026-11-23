@@ -76,6 +76,7 @@
       "type": "object",
       "properties": {
         "typical_day": { "type": "boolean", "description": "用户是否认为这是典型的一天" },
+        "raw_text": { "type": ["string", "null"], "description": "对话式入口下用户用自然语言写的一天饮食原文；meals 可为空" },
         "meals": {
           "type": "array",
           "items": {
