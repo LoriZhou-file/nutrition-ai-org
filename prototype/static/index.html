@@ -3,192 +3,242 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>SeekNutri 控糖助手（雏形）</title>
+<title>7 天控糖小挑战</title>
 <style>
-:root{--bg:#f6f8f6;--card:#fff;--ink:#1c2a22;--sub:#5d6b63;--line:#dde5df;--brand:#2f7d5b;--brand-ink:#fff;--soft:#e8f3ec;--warn:#8a5a00;--warn-bg:#fff4dc;--red:#a12f2f;--red-bg:#fdeaea;--user:#2f7d5b}
-@media (prefers-color-scheme:dark){:root{--bg:#121816;--card:#1b2420;--ink:#e8efe9;--sub:#a3b1a9;--line:#2c3a33;--brand:#58b88a;--brand-ink:#0d1a13;--soft:#1f3328;--warn:#f0c46a;--warn-bg:#352a10;--red:#f19a9a;--red-bg:#3a1c1c;--user:#58b88a}}
+:root{--bg:#f6f8f6;--card:#fff;--ink:#1c2a22;--sub:#5d6b63;--line:#dde5df;--brand:#2f7d5b;--brand-ink:#fff;--soft:#e8f3ec;--warn:#8a5a00;--warn-bg:#fff4dc;--red:#a12f2f;--red-bg:#fdeaea;--half:#e0a93b}
+@media (prefers-color-scheme:dark){:root{--bg:#121816;--card:#1b2420;--ink:#e8efe9;--sub:#a3b1a9;--line:#2c3a33;--brand:#58b88a;--brand-ink:#0d1a13;--soft:#1f3328;--warn:#f0c46a;--warn-bg:#352a10;--red:#f19a9a;--red-bg:#3a1c1c;--half:#e0b25a}}
 *{box-sizing:border-box}
-html,body{height:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
-.app{max-width:520px;margin:0 auto;height:100dvh;display:flex;flex-direction:column}
-header{padding:12px 16px 8px;display:flex;align-items:center;justify-content:space-between;flex:none}
-.brand{font-weight:600;font-size:17px}.brand small{font-weight:400;color:var(--sub);margin-left:6px}
-.eng{font-size:12px;color:var(--sub)}
-.demo{margin:0 16px 6px;background:var(--warn-bg);color:var(--warn);border-radius:8px;padding:6px 10px;font-size:12px;flex:none}
-#log{flex:1;overflow-y:auto;padding:8px 16px 12px}
-.m{max-width:88%;margin:10px 0;padding:10px 13px;border-radius:14px;white-space:pre-wrap;word-break:break-word}
-.m.a{background:var(--card);border:1px solid var(--line);border-top-left-radius:4px}
-.m.u{background:var(--user);color:var(--brand-ink);margin-left:auto;border-top-right-radius:4px}
-.m.n{background:var(--warn-bg);color:var(--warn);font-size:14px}
-.m.s{background:var(--red-bg);color:var(--red);max-width:100%}
-.m.wide{max-width:100%;width:100%}
-.src{font-size:12px;color:var(--sub);margin:-4px 0 6px 4px}
-.hello h1{font-size:20px;margin:0 0 4px;font-weight:600}.hello p{margin:0;color:var(--sub);font-size:14px}
-.gate{background:var(--card);border:1px solid var(--brand);border-radius:12px;padding:12px;margin:10px 0}
-.gate p{margin:0 0 10px;font-size:15px}.gate .opts{display:flex;flex-wrap:wrap;gap:8px}
-.opt{border:1px solid var(--brand);background:transparent;color:var(--brand);border-radius:999px;padding:7px 14px;font:inherit;font-size:14px;cursor:pointer}
-.opt:disabled{opacity:.45;cursor:default}.opt.picked{background:var(--brand);color:var(--brand-ink);opacity:1}
-.item{border-left:3px solid var(--brand);padding:2px 0 2px 12px;margin:12px 0}.item b{display:block}.item .k{color:var(--sub);font-size:13px}
-.tag{display:inline-block;font-size:12px;background:var(--soft);color:var(--brand);border-radius:6px;padding:1px 8px;margin-left:6px}
+.wrap{max-width:480px;margin:0 auto;padding:0 16px calc(28px + env(safe-area-inset-bottom))}
+header{padding:14px 0 8px;display:flex;justify-content:space-between;align-items:center}
+.brand{font-weight:600}.brand small{color:var(--sub);font-weight:400;margin-left:6px}
+.demo{background:var(--warn-bg);color:var(--warn);border-radius:8px;padding:6px 10px;font-size:12px;margin-bottom:10px}
+section{display:none}section.on{display:block}
+h1{font-size:26px;line-height:1.3;margin:14px 0 6px;font-weight:600}
+h2{font-size:18px;margin:6px 0;font-weight:600}
+.sub{color:var(--sub);font-size:15px;margin:0 0 14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px}
+.feat{display:flex;gap:12px;align-items:flex-start;padding:10px 0}.feat+.feat{border-top:1px solid var(--line)}
+.feat b{display:block}.feat span{color:var(--sub);font-size:14px}
+.num{flex:none;width:28px;height:28px;border-radius:50%;background:var(--soft);color:var(--brand);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px}
+.btn{display:block;width:100%;background:var(--brand);color:var(--brand-ink);border:0;border-radius:12px;padding:14px;font:inherit;font-weight:600;cursor:pointer;margin-top:10px}
+.btn.ghost{background:transparent;color:var(--brand);border:1px solid var(--brand)}
+.btn.soft{background:var(--soft);color:var(--brand)}
+.btn:disabled{opacity:.5}
+.linkbtn{background:none;border:0;color:var(--sub);font:inherit;font-size:13px;text-decoration:underline;cursor:pointer;padding:6px 0}
+.yn{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line);font-size:15px}.yn:first-of-type{border-top:0}
+.seg{display:flex;gap:6px;flex:none}.seg button{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:6px 14px;font:inherit;font-size:14px}
+.seg button.on{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.chip{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:8px 14px;font:inherit;font-size:15px;cursor:pointer}
+.chip.on{border-color:var(--brand);color:var(--brand);background:var(--soft)}
+.chk{display:flex;gap:10px;align-items:flex-start;font-size:14px}.chk input{margin-top:5px}
+.err{color:var(--red);font-size:13px;min-height:1px;margin-top:6px}
+.dots{display:flex;gap:6px;justify-content:space-between;margin:4px 0 14px}
+.dot{flex:1;text-align:center;font-size:12px;color:var(--sub);background:none;border:0;padding:0;cursor:pointer;font:inherit}
+.dot i{display:block;width:100%;aspect-ratio:1;max-width:38px;margin:0 auto 4px;border-radius:50%;border:2px solid var(--line);background:var(--card);position:relative}
+.dot.done i{background:var(--brand);border-color:var(--brand)}
+.dot.partial i{background:linear-gradient(90deg,var(--half) 50%,var(--card) 50%);border-color:var(--half)}
+.dot.skipped i{border-style:dashed;border-color:var(--sub)}
+.dot.locked{opacity:.4;cursor:default}
+.dot.cur i{box-shadow:0 0 0 3px var(--soft);border-color:var(--brand)}
+.dot.sel{color:var(--ink);font-weight:600}
+.tag{display:inline-block;font-size:12px;background:var(--soft);color:var(--brand);border-radius:6px;padding:1px 8px}
+.task{font-size:20px;line-height:1.5;font-weight:600;margin:8px 0 10px}
+.kv{font-size:14px;color:var(--sub);margin:6px 0}.kv b{color:var(--ink);font-weight:600}
+.note{background:var(--warn-bg);color:var(--warn);border-radius:10px;padding:9px 12px;font-size:14px;margin-top:10px}
+.stop{background:var(--red-bg);color:var(--red);border-radius:14px;padding:16px}
+.fb{background:var(--soft);border-radius:14px;padding:14px;margin-bottom:12px}
+.fb p{margin:0 0 6px}.fb p:last-child{margin:0}
 .small{font-size:12px;color:var(--sub)}
-.kv{display:grid;grid-template-columns:84px 1fr;gap:6px 10px;font-size:14px;margin:0 0 10px}.kv dt{color:var(--sub)}.kv dd{margin:0}
-.chk{display:flex;gap:8px;align-items:flex-start;font-size:14px;margin:8px 0}.chk input{margin-top:5px}
-.row-in{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-top:6px}
-.btn{background:var(--brand);color:var(--brand-ink);border:0;border-radius:10px;padding:10px 16px;font:inherit;font-weight:600;cursor:pointer}
-.btn.ghost{background:transparent;color:var(--brand);border:1px solid var(--brand)}.btn:disabled{opacity:.5}
-.dots span{display:inline-block;width:6px;height:6px;margin-right:4px;border-radius:50%;background:var(--sub);animation:b 1s infinite}.dots span:nth-child(2){animation-delay:.15s}.dots span:nth-child(3){animation-delay:.3s}
-@keyframes b{50%{opacity:.25}}
-footer{flex:none;border-top:1px solid var(--line);background:var(--bg);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
-#chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none}#chips::-webkit-scrollbar{display:none}
-.chip{flex:none;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 12px;font-size:14px;cursor:pointer;color:var(--ink)}
-.chip.main{border-color:var(--brand);color:var(--brand)}
-.inbar{display:flex;gap:8px;align-items:flex-end}
-#inp{flex:1;font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;resize:none;max-height:120px;min-height:44px}
-#inp:focus{outline:2px solid var(--brand)}
-#send{flex:none;height:44px;padding:0 16px}
-.note{font-size:11px;color:var(--sub);text-align:center;margin-top:6px}
+input.t,textarea.t{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:8px}
+.sumline{margin:6px 0}
+.foot{margin-top:18px;text-align:center}
 </style>
 </head>
 <body>
-<div class="app">
-  <header><div class="brand">SeekNutri<small>控糖助手</small></div><span class="eng" id="eng"></span></header>
-  <div class="demo">雏形演示：知识未经营养师审核，风险关键词为演示用，请勿对外使用。</div>
-  <div id="log" aria-live="polite"></div>
-  <footer>
-    <div id="chips"></div>
-    <div class="inbar"><textarea id="inp" rows="1" placeholder="说说你想了解什么，比如：血糖高还能吃水果吗？"></textarea><button class="btn" id="send">发送</button></div>
-    <div class="note">我是 AI 营养助手，不是医生或营养师；内容由 AI 生成，仅作一般性参考。请不要输入姓名、手机号。</div>
-  </footer>
+<div class="wrap">
+<header><div class="brand">SeekNutri<small>控糖助手</small></div><span class="small" id="eng"></span></header>
+<div class="demo">雏形演示：任务内容尚未经营养师审核，请勿对外使用。</div>
+
+<!-- 开场 -->
+<section id="s_intro" class="on">
+  <h1>7 天控糖小挑战</h1>
+  <p class="sub">每天只做一件小事，不用节食，不用记数字。每天大约 1 分钟。</p>
+  <div class="card">
+    <div class="feat"><div class="num">1</div><div><b>每天一个小任务</b><span>先吃蔬菜、饮料换一换、早餐加蛋白质……都是生活里顺手能做的事</span></div></div>
+    <div class="feat"><div class="num">2</div><div><b>点一下就能打卡</b><span>做到了、做了一部分、没做到，不用写文字，不用拍照</span></div></div>
+    <div class="feat"><div class="num">3</div><div><b>第 7 天拿到你的小结</b><span>看看哪件事最适合你，想继续的话可以让营养师带你</span></div></div>
+  </div>
+  <button class="btn" id="b_start">开始</button>
+  <p class="small" style="text-align:center;margin-top:10px">我是 AI 营养助手，不是医生或营养师，不涉及药物调整。</p>
+</section>
+
+<!-- 安全确认 -->
+<section id="s_gate">
+  <h2>开始前，30 秒确认</h2>
+  <p class="sub">为了安全，有些情况需要由医生或营养师当面指导。</p>
+  <div class="card" id="gateList"></div>
+  <div class="card">
+    <b style="font-size:15px">目前是否在使用降糖药物？</b>
+    <div class="chips" id="drugChips"></div>
+  </div>
+  <div class="card"><label class="chk"><input type="checkbox" id="consent"><span>我同意提供健康相关信息，用于生成每日任务和小结。不需要姓名和手机号，可以随时删除。</span></label></div>
+  <div class="err" id="e_gate"></div>
+  <button class="btn" id="b_go">开始挑战</button>
+</section>
+
+<!-- 主页 -->
+<section id="s_home">
+  <div class="dots" id="dots"></div>
+  <div class="card" id="taskCard"></div>
+  <div id="after"></div>
+  <div class="foot">
+    <p class="small" id="footer"></p>
+    <button class="linkbtn" id="b_demo" style="display:none">演示：模拟到下一天</button>
+    <button class="linkbtn" id="b_del">删除我的全部数据</button>
+  </div>
+</section>
+
+<!-- 暂停 -->
+<section id="s_stop">
+  <div class="stop" id="stopMsg"></div>
+  <p class="small" style="margin-top:12px">本工具不能替代医生。</p>
+  <div class="foot"><button class="linkbtn" id="b_del2">删除我的全部数据</button></div>
+</section>
+
+<!-- 不符合条件 -->
+<section id="s_ref"><div class="stop" id="refMsg"></div></section>
 </div>
 
 <script>
 const $=id=>document.getElementById(id);
-const uid=()=> (crypto.randomUUID?crypto.randomUUID():'00000000-0000-4000-8000-'+Date.now().toString().padStart(12,'0').slice(-12));
-let STATE={session_id:uid()}, HISTORY=[], BUSY=false, LAST_STAGE=null;
-const EXAMPLES=['血糖高还能吃水果吗','主食怎么吃血糖更稳','晚上总想吃东西怎么办','经常吃外卖怎么选','为什么体重没变腰围变大了'];
+const el=(t,c,x)=>{const e=document.createElement(t); if(c)e.className=c; if(x!=null)e.textContent=x; return e;};
+const SID_KEY='sn_challenge_sid';
+let SID=null; try{SID=localStorage.getItem(SID_KEY);}catch(e){}
+const NEW_SID=()=> (crypto.randomUUID?crypto.randomUUID():'00000000-0000-4000-8000-'+Date.now().toString().padStart(12,'0').slice(-12));
+let ST=null, SEL=null, SCREEN={}, DRUG=null, FB={};
+const DEMO=new URLSearchParams(location.search).get('demo')==='1';
 
-function el(tag,cls,text){const e=document.createElement(tag); if(cls)e.className=cls; if(text!=null)e.textContent=text; return e;}
-function scroll(){const l=$('log'); l.scrollTop=l.scrollHeight;}
-function bubble(kind,text){const b=el('div','m '+kind,text); $('log').appendChild(b); scroll(); return b;}
-function setChips(list){ // list: [{label, send|action}]
-  const c=$('chips'); c.replaceChildren();
-  list.forEach(x=>{const b=el('button','chip'+(x.main?' main':''),x.label); b.type='button'; b.onclick=()=>{ if(x.action) act(x.action,x.label); else say(x.send||x.label); }; c.appendChild(b);});
+function show(id){document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id===id)); window.scrollTo(0,0);}
+async function api(path,body,method){
+  const r=await fetch(path,{method:method||(body?'POST':'GET'),headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
+  let j=null; try{j=await r.json();}catch(e){}
+  if(!r.ok){const err=new Error((j&&j.detail)||'请求失败'); err.status=r.status; throw err;}
+  return j;
 }
-function defaultChips(extra){
-  const base=[]; if(extra) extra.forEach(t=>base.push({label:t}));
-  if(STATE.referred||STATE.blocked) return setChips(base);
-  base.push({label:STATE.advice_done?'再分析一天饮食':'帮我分析一天饮食',main:true,action:{type:'want_personal'}});
-  if(STATE.advice_done) base.push({label:'整理我的档案',main:true,action:{type:'profile'}});
-  setChips(base);
-}
-function welcome(){
-  const w=el('div','m a wide hello'); w.appendChild(el('h1',null,'你好，我是 AI 营养助手')); w.appendChild(el('p',null,'关于控糖和饮食，你最想问什么？直接写下来就行，也可以点下面的例子。')); $('log').appendChild(w);
-  setChips([...EXAMPLES.map(t=>({label:t})),{label:'帮我分析一天饮食',main:true,action:{type:'want_personal'}}]);
-}
+fetch('/api/health').then(r=>r.json()).then(h=>{$('eng').textContent=h.engine==='mock'?'演示模式':'模型：'+h.engine;}).catch(()=>{});
 
-async function call(body){
-  BUSY=true; $('send').disabled=true;
-  const t=el('div','m a'); const d=el('span','dots'); for(let i=0;i<3;i++)d.appendChild(el('span')); t.appendChild(d); $('log').appendChild(t); scroll();
+// ---- 开场 → 安全确认
+$('b_start').onclick=()=>show('s_gate');
+const Q=[['adult','我已满 18 岁',true],['pregnant_or_lactating','我目前处于孕期或哺乳期',false],['type1_diabetes','我是 1 型糖尿病',false],['severe_kidney_or_eating_disorder','我有严重肾病，或有进食障碍（如催吐、暴食）',false]];
+Q.forEach(([k,q])=>{const row=el('div','yn'); row.appendChild(el('span',null,q)); const seg=el('div','seg');
+  [['是',true],['否',false]].forEach(([t,v])=>{const b=el('button',null,t); b.type='button'; b.onclick=()=>{SCREEN[k]=v;[...seg.children].forEach(x=>x.classList.remove('on'));b.classList.add('on');}; seg.appendChild(b);});
+  row.appendChild(seg); $('gateList').appendChild(row);});
+[['没有使用','no'],['口服药','oral'],['胰岛素','insulin'],['口服药和胰岛素','oral_and_insulin'],['不确定','unsure']].forEach(([l,v])=>{
+  const c=el('button','chip',l); c.type='button'; c.onclick=()=>{DRUG=v;[...$('drugChips').children].forEach(x=>x.classList.remove('on'));c.classList.add('on');}; $('drugChips').appendChild(c);});
+$('b_go').onclick=async()=>{
+  if(Q.some(([k])=>SCREEN[k]===undefined)||!DRUG){$('e_gate').textContent='请逐项选择';return;}
+  if(!$('consent').checked){$('e_gate').textContent='需要先勾选同意才能继续';return;}
+  $('e_gate').textContent=''; $('b_go').disabled=true;
   try{
-    const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({state:STATE,history:HISTORY.slice(-8),...body})});
-    if(!r.ok) throw new Error('请求失败');
-    const j=await r.json(); STATE=j.state; t.remove(); render(j.events);
-  }catch(e){t.remove(); bubble('n','网络或服务出了点问题，请稍后再试。');}
-  finally{BUSY=false; $('send').disabled=false; $('inp').focus();}
+    SID=SID||NEW_SID();
+    ST=await api('/api/challenge/start',{session_id:SID,consent:true,screening:SCREEN,uses_glucose_lowering_drug:DRUG,source:new URLSearchParams(location.search).get('src')||'challenge'});
+    try{localStorage.setItem(SID_KEY,SID);}catch(e){}
+    SEL=null; render();
+  }catch(e){ if(e.status===403){$('refMsg').textContent=e.message; show('s_ref');} else $('e_gate').textContent=e.message; }
+  finally{$('b_go').disabled=false;}
+};
+
+// ---- 主页
+function render(){
+  if(ST.blocked){ $('stopMsg').replaceChildren(); (ST.stop_messages||[]).forEach(m=>$('stopMsg').appendChild(el('p',null,m))); show('s_stop'); return; }
+  const day=SEL||ST.current_day; SEL=day;
+  const dots=$('dots'); dots.replaceChildren();
+  ST.days.forEach(d=>{const b=el('button','dot '+(d.status||'')+(d.unlocked?'':' locked')+(d.day===ST.current_day?' cur':'')+(d.day===day?' sel':'')); b.type='button';
+    b.appendChild(el('i')); b.appendChild(document.createTextNode('第'+d.day+'天')); if(d.unlocked) b.onclick=()=>{SEL=d.day; FB={}; render();}; dots.appendChild(b);});
+  const t=ST.tasks[day], ck=ST.checkins[day], card=$('taskCard'); card.replaceChildren(); $('after').replaceChildren();
+  const head=el('div'); head.appendChild(el('span','tag',day===ST.current_day?'今天的小任务':'第 '+day+' 天的任务')); head.appendChild(el('span','small','  '+t.title)); card.appendChild(head);
+  card.appendChild(el('div','task',t.task));
+  const why=el('div','kv'); why.appendChild(el('b',null,'为什么：')); why.appendChild(document.createTextNode(t.why)); card.appendChild(why);
+  const how=el('div','kv'); how.appendChild(el('b',null,'怎么做：')); how.appendChild(document.createTextNode(t.how)); card.appendChild(how);
+  if(t.note) card.appendChild(el('div','note',t.note));
+  if(ck){ renderDone(card,t,ck,day); }
+  else renderButtons(card,t,day);
+  $('footer').textContent=ST.footer;
+  $('b_demo').style.display=(DEMO&&ST.demo&&ST.current_day<7)?'inline-block':'none';
+  if(ST.summary && day===7 && ST.checkins[7]) renderSummary();
+  show('s_home');
 }
 
-function say(text){ if(BUSY||!text.trim())return; bubble('u',text); HISTORY.push({role:'user',content:text}); $('inp').value=''; grow(); setChips([]); call({message:text}); }
-function act(action,label){ if(BUSY)return; if(label) bubble('u',label); setChips([]);
-  if(action.type==='profile'){ showProfile(); return; }
-  call({action}); }
-
-function advicePlaceholder(){ $('inp').placeholder = STATE.stage==='awaiting_diet' ? '例如：早餐白粥一碗、咸菜；午餐外卖盖饭……' : STATE.stage==='awaiting_clarify' ? '直接回答上面的问题就行' : '说说你想了解什么，比如：血糖高还能吃水果吗？'; }
-
-function render(events){
-  let chips=null, extraQuick=null;
-  events.forEach(e=>{
-    if(e.type==='text') bubble('a',e.text);
-    else if(e.type==='notice') bubble('n',e.text);
-    else if(e.type==='stop'){const b=el('div','m s'); e.messages.forEach(m=>b.appendChild(el('p',null,m))); b.lastChild.style.margin=0; $('log').appendChild(b); chips=[];}
-    else if(e.type==='referred'){bubble('s',e.text); chips=[];}
-    else if(e.type==='answer'){
-      bubble('a',e.text+(e.follow_up?'\n\n'+e.follow_up:'')); HISTORY.push({role:'assistant',content:e.text+(e.follow_up?' '+e.follow_up:'')});
-      if(e.sources&&e.sources.length) $('log').appendChild(el('div','src','依据（待审核）：'+e.sources.map(s=>s.id+' '+s.topic).join('；')));
-      if(e.guard&&e.guard.fallback) $('log').appendChild(el('div','src','（回答未通过安全检查，已使用保守回复）'));
-      extraQuick=e.quick_replies||[];
-    }
-    else if(e.type==='gate') renderGate(e);
-    else if(e.type==='ask_diet') bubble('a',e.text);
-    else if(e.type==='clarify'){ bubble('a','再确认几个细节，会让建议更贴近你的实际情况（不确定可以直接说不确定）：\n'+e.questions.map((q,i)=>(i+1)+'. '+q).join('\n')); }
-    else if(e.type==='advice') renderAdvice(e);
-  });
-  advicePlaceholder();
-  if(window.__keepTop){window.__keepTop=false;} else scroll();
-  if(STATE.referred) return setChips([]);
-  if(events.some(e=>e.type==='stop')) return setChips([]);
-  if(events.some(e=>e.type==='gate')) return setChips([]);
-  if(STATE.stage) return setChips([]);
-  defaultChips(extraQuick);
+function renderButtons(card,t,day){
+  const box=el('div'); box.style.marginTop='12px'; card.appendChild(box);
+  const mk=(label,status,cls)=>{const b=el('button','btn '+cls,label); b.type='button'; b.onclick=()=>pick(box,t,day,status); return b;};
+  box.appendChild(mk(ST.statuses.done,'done','')); box.appendChild(mk(ST.statuses.partial,'partial','soft')); box.appendChild(mk(ST.statuses.skipped,'skipped','ghost'));
 }
-
-function renderGate(g){
-  const box=el('div','gate'); box.appendChild(el('p',null,g.text)); const o=el('div','opts');
-  g.options.forEach(op=>{const b=el('button','opt',op.label); b.type='button';
-    b.onclick=()=>{ if(BUSY)return; [...o.children].forEach(x=>x.disabled=true); b.classList.add('picked'); call({action:{type:'gate_answer',key:g.key,value:op.value}}); };
-    o.appendChild(b);});
-  box.appendChild(o); $('log').appendChild(box);
+function pick(box,t,day,status){
+  box.replaceChildren();
+  if(status==='skipped'){
+    box.appendChild(el('p','kv','是什么让你今天没做到？（可以跳过）'));
+    const ch=el('div','chips'); ST.barriers.forEach(b=>{const c=el('button','chip',b.label); c.type='button'; c.onclick=()=>submit(day,status,{barrier:b.id}); ch.appendChild(c);}); box.appendChild(ch);
+    const skip=el('button','linkbtn','跳过'); skip.onclick=()=>submit(day,status,{}); box.appendChild(skip);
+  }else if(t.question){
+    box.appendChild(el('p','kv',t.question.text+'（可以跳过）'));
+    const ch=el('div','chips'); t.question.options.forEach(o=>{const c=el('button','chip',o); c.type='button'; c.onclick=()=>submit(day,status,{answer:o}); ch.appendChild(c);}); box.appendChild(ch);
+    const skip=el('button','linkbtn','跳过'); skip.onclick=()=>submit(day,status,{}); box.appendChild(skip);
+  }else submit(day,status,{});
 }
-
-function renderAdvice(e){
-  const a=e.advice, box=el('div','m a wide');
-  const h=el('div',null,''); h.appendChild(el('b',null,'你的控糖饮食小结')); h.appendChild(el('span','tag','AI 生成')); box.appendChild(h);
-  e.notices.forEach(n=>box.appendChild(el('p','small',n.message)));
-  box.appendChild(el('p',null,a.overview));
-  a.top3.forEach((t,i)=>{const d=el('div','item'); d.appendChild(el('b',null,(i+1)+'. '+t.finding)); d.appendChild(el('div','k','为什么：'+t.why)); d.appendChild(el('div',null,'怎么改：'+t.how)); box.appendChild(d);});
-  if(a.good&&a.good.length) box.appendChild(el('p',null,'做得好的：'+a.good.join('；')));
-  if(a.missing_info&&a.missing_info.length) box.appendChild(el('p','small','需要说明：'+a.missing_info.join('；')));
-  box.appendChild(el('p','small',a.note));
-  if(e.sources.length) box.appendChild(el('p','small','依据（待审核）：'+e.sources.map(s=>s.id+' '+s.topic).join('；')));
-  if(e.guard.fallback) box.appendChild(el('p','small','本次使用通用建议（模型输出未通过安全检查）'));
-  $('log').appendChild(box);
-  box.scrollIntoView({block:'start'});
-  const tail=el('div','m a','调整饮食最难的是坚持。你可以继续问我别的问题，也可以点“整理我的档案”，看看我记下了什么。'); $('log').appendChild(tail);
-  window.__keepTop=true;
-}
-
-// ---- 档案
-const DRUG={no:'没有使用',oral:'口服药',insulin:'胰岛素',oral_and_insulin:'口服药和胰岛素',unsure:'不确定'};
-async function showProfile(){
-  BUSY=true;
+async function submit(day,status,extra){
   try{
-    const r=await fetch('/api/chat/profile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({state:STATE})});
-    if(!r.ok) throw new Error((await r.json()).detail||'失败'); const d=(await r.json()).profile;
-    const box=el('div','m a wide'); box.appendChild(el('p',null,'这是我根据我们的对话整理的档案，不对的地方可以在对话里告诉我。'));
-    const kv=el('dl','kv'); const add=(k,v)=>{kv.appendChild(el('dt',null,k)); kv.appendChild(el('dd',null,v));};
-    const b=d.basic||{}; if(b.age_band||b.sex) add('基本',[b.age_band&&b.age_band+' 岁', {female:'女',male:'男'}[b.sex]].filter(Boolean).join('，'));
-    add('用药',DRUG[d.glycemic.uses_glucose_lowering_drug]); add('处理模式',d.mode==='conservative'?'保守（有用药或未确认）':'标准');
-    if(d.concerns.length) add('关注点',d.concerns.join('、')); if(d.diet_log.raw_text) add('一天饮食',d.diet_log.raw_text);
-    box.appendChild(kv);
-    const lab=el('label','chk'); const cb=el('input'); cb.type='checkbox'; lab.appendChild(cb); lab.appendChild(el('span',null,'我想了解有营养师带着我坚持一段时间的服务。我们会先和营养师团队把方案想清楚再通知你。（不收费，不绑定购买）')); box.appendChild(lab);
-    const note=el('input','row-in'); note.type='text'; note.placeholder='你最希望得到什么帮助？（可选）'; box.appendChild(note);
-    const row=el('div',null); row.style.marginTop='10px'; const ok=el('button','btn','确认并保存'); ok.type='button';
-    ok.onclick=async()=>{ ok.disabled=true;
-      try{const rr=await fetch('/api/chat/profile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({state:STATE,confirmed:true,interest:{coaching_interest:cb.checked,notes:note.value}})});
-        if(!rr.ok) throw new Error('保存失败'); box.replaceChildren(el('p',null,'已保存。如果你不希望保留，可以随时删除。'));
-        const del=el('button','btn ghost','删除我的全部数据'); del.type='button'; del.onclick=async()=>{ await fetch('/api/session/'+STATE.session_id,{method:'DELETE'}); box.replaceChildren(el('p',null,'已删除。')); }; box.appendChild(del);
-      }catch(err){ok.disabled=false; bubble('n',err.message);} };
-    row.appendChild(ok); box.appendChild(row); $('log').appendChild(box); scroll();
-  }catch(e){ bubble('n','现在还不能整理档案：'+e.message+'。可以先点“帮我分析一天饮食”。'); }
-  finally{BUSY=false; defaultChips(null);}
+    const r=await api('/api/challenge/'+SID+'/checkin',{day,status,...extra});
+    if(r.stop){ ST=r.state; render(); return; }
+    FB[day]={feedback:r.feedback,ai:r.ai_reply,notices:r.notices}; ST=r.state; render();
+  }catch(e){ alert(e.message); }
+}
+function renderDone(card,t,ck,day){
+  const lab={done:'做到了',partial:'做了一部分',skipped:'没做到'}[ck.status];
+  const row=el('div','kv'); row.style.marginTop='12px'; row.appendChild(el('b',null,'已打卡：')); row.appendChild(document.createTextNode(lab+(ck.answer?' · '+ck.answer:'')));
+  card.appendChild(row);
+  const a=$('after'), f=FB[day];
+  if(f){const box=el('div','fb'); f.notices.forEach(n=>box.appendChild(el('p','small',n))); box.appendChild(el('p',null,f.feedback)); if(f.ai) box.appendChild(el('p',null,f.ai)); a.appendChild(box);}
+  if(day===ST.current_day && day<7){
+    const nxt=el('div','card'); nxt.appendChild(el('b',null,'明天见')); nxt.appendChild(el('div','small','明天的小任务：「'+ST.days[day].title+'」。不用急，做完今天的就够了。')); a.appendChild(nxt);
+  }
+  if(!ck.note){
+    const wrap=el('div'); const open=el('button','linkbtn','想补充一句？比如哪里不舒服、遇到什么情况'); wrap.appendChild(open);
+    open.onclick=()=>{wrap.replaceChildren(); const i=el('input','t'); i.type='text'; i.maxLength=200; i.placeholder='写一句就行'; wrap.appendChild(i);
+      const s=el('button','btn soft','发送'); s.type='button'; s.onclick=async()=>{ if(!i.value.trim())return; s.disabled=true;
+        try{const r=await api('/api/challenge/'+SID+'/checkin',{day,status:ck.status,barrier:ck.barrier,answer:ck.answer,note:i.value.trim()});
+          if(r.stop){ST=r.state;render();return;} FB[day]={feedback:FB[day]?FB[day].feedback:r.feedback,ai:r.ai_reply,notices:r.notices}; ST=r.state; render();}catch(e){alert(e.message);s.disabled=false;}}; wrap.appendChild(s);};
+    a.appendChild(wrap);
+  }
 }
 
-// ---- 输入
-function grow(){const i=$('inp'); i.style.height='auto'; i.style.height=Math.min(i.scrollHeight,120)+'px';}
-$('inp').addEventListener('input',grow);
-$('inp').addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault(); say($('inp').value);} });
-$('send').onclick=()=>say($('inp').value);
-fetch('/api/health').then(r=>r.json()).then(h=>{$('eng').textContent=h.engine==='mock'?'演示模式（未接入大模型）':'模型：'+h.engine;}).catch(()=>{});
-welcome();
+// ---- 7 天小结
+function renderSummary(){
+  const s=ST.summary, a=$('after'); const box=el('div','card'); box.appendChild(el('h2',null,s.title));
+  s.lines.forEach(l=>box.appendChild(el('p','sumline',l)));
+  box.appendChild(el('hr')); box.lastChild.style.cssText='border:0;border-top:1px solid var(--line);margin:12px 0';
+  if(ST.confirmed){ box.appendChild(el('p',null,ST.interest.coaching_interest?'已记录你的意向，营养师团队方案准备好后会通知你。':'已保存你的小结。')); }
+  else{
+    box.appendChild(el('p','kv',s.invite));
+    const lab=el('label','chk'); const cb=el('input'); cb.type='checkbox'; lab.appendChild(cb); lab.appendChild(el('span',null,'我想了解有营养师带着我继续做')); box.appendChild(lab);
+    const note=el('input','t'); note.type='text'; note.placeholder='你最希望得到什么帮助？（可选）'; box.appendChild(note);
+    const ok=el('button','btn','保存我的小结'); ok.type='button'; ok.onclick=async()=>{ok.disabled=true;
+      try{ST=await api('/api/challenge/'+SID+'/interest',{coaching_interest:cb.checked,notes:note.value}); render();}catch(e){alert(e.message);ok.disabled=false;}}; box.appendChild(ok);
+  }
+  a.appendChild(box);
+}
+
+// ---- 其他
+$('b_demo').onclick=async()=>{ try{ST=await api('/api/challenge/'+SID+'/advance',{}); SEL=null; FB={}; render();}catch(e){alert(e.message);} };
+async function del(){ if(!confirm('确定删除你的全部数据吗？删除后不能恢复。'))return;
+  try{await api('/api/session/'+SID,null,'DELETE'); try{localStorage.removeItem(SID_KEY);}catch(e){} SID=null; ST=null; SEL=null; FB={}; location.reload();}catch(e){alert(e.message);} }
+$('b_del').onclick=del; $('b_del2').onclick=del;
+
+// ---- 回访：有记录就直接进主页
+(async()=>{ if(!SID) return;
+  try{ST=await api('/api/challenge/'+SID); render();}catch(e){ if(e.status===404){ try{localStorage.removeItem(SID_KEY);}catch(x){} SID=null; } } })();
 </script>
 </body>
 </html>

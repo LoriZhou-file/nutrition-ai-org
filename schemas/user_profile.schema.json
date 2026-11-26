@@ -116,6 +116,33 @@
       "items": { "type": "string" },
       "description": "用户最关心的问题（原话要点），用于汇总分析"
     },
+    "challenge": {
+      "type": "object",
+      "description": "7 天控糖挑战的打卡记录。档案由打卡逐步形成，记录的是行为与障碍，不含血糖数值。",
+      "properties": {
+        "program": { "type": "string" },
+        "version": { "type": "string" },
+        "started_on": { "type": "string", "format": "date" },
+        "demo_offset_days": { "type": "integer", "description": "仅演示：把挑战往后推进的天数" },
+        "blocked": { "type": "boolean", "description": "出现红级信号后暂停挑战" },
+        "checkins": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["day", "status"],
+            "properties": {
+              "day": { "type": "integer", "minimum": 1, "maximum": 7 },
+              "date": { "type": "string", "format": "date" },
+              "status": { "type": "string", "enum": ["done", "partial", "skipped"] },
+              "barrier": { "type": ["string", "null"] },
+              "answer_key": { "type": ["string", "null"] },
+              "answer": { "type": ["string", "null"] },
+              "note": { "type": ["string", "null"] }
+            }
+          }
+        }
+      }
+    },
     "risk_level": { "type": "string", "enum": ["green", "yellow", "red"] },
     "risk_flags": {
       "type": "array",

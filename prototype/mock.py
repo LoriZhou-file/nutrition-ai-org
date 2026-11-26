@@ -18,6 +18,8 @@ def _all_meal_text(ctx: dict) -> str:
 def respond(kind: str, ctx: dict) -> dict:
     if kind == "chat":
         return _chat(ctx)
+    if kind == "feedback":
+        return {"reply": "（演示模式）收到你写的这一句，谢谢你认真记录，继续保持。"}
     return _clarify(ctx) if kind == "clarify" else _advice(ctx)
 
 

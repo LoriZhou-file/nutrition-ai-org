@@ -166,7 +166,8 @@ def test_chat_guard_blocks_bad_reply(monkeypatch):
 
 
 def test_pages_served():
-    assert "SeekNutri" in client.get("/").text and "chat" not in client.get("/").text[:0]
+    assert "挑战" in client.get("/").text
+    assert "SeekNutri" in client.get("/chat").text
     assert client.get("/form").status_code == 200
 
 

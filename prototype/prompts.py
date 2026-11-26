@@ -65,6 +65,22 @@ CHAT_SCHEMA = """只输出一个 JSON 对象，不要输出其他文字：
 slot_updates 只填用户明确说过的内容，没说过的字段不要写。age_band 取值 18-29、30-39、40-49、50-59、60-69、70+；sex 取值 female、male。"""
 
 
+FEEDBACK_SCOPE = """
+你在给 7 天控糖小挑战的用户一句话回应。
+- 只回应用户写的那一句话：先认可，再根据内容给一个很小的鼓励或提示。
+- 一到两句话，不超过 60 字。不要布置新任务，不要追问。
+- 不涉及药物、诊断、克数、热量；不建议少吃、跳餐。
+- 如果用户说身体不舒服，温和地建议联系医生，不要给饮食建议。
+只输出 JSON：{"reply": "回应内容"}"""
+
+
+def feedback_system(mode: str) -> str:
+    parts = [COMMON_RULES, FEEDBACK_SCOPE]
+    if mode == "conservative":
+        parts.append(CONSERVATIVE_RULES)
+    return "\n\n".join(parts)
+
+
 def chat_system(mode: str, units: list[dict]) -> str:
     parts = [COMMON_RULES, CHAT_SCOPE]
     if mode == "conservative":

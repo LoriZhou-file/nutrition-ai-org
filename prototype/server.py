@@ -14,7 +14,7 @@ import jsonschema
 from fastapi import Body, FastAPI, HTTPException
 from fastapi.responses import FileResponse
 
-from . import chat, guard, knowledge, llm, prompts, rules
+from . import challenge, chat, guard, knowledge, llm, prompts, rules
 
 BASE = pathlib.Path(__file__).resolve().parent
 DATA = BASE / "data"
@@ -148,6 +148,49 @@ def _require(p: dict) -> tuple[str, dict]:
 @app.get("/")
 def index():
     return FileResponse(BASE / "static" / "index.html")
+
+
+@app.get("/chat")
+def chat_page():
+    """对话版入口，保留作对照。"""
+    return FileResponse(BASE / "static" / "chat.html")
+
+
+def _ce(fn, *a):
+    try:
+        return fn(*a)
+    except challenge.ChallengeError as e:
+        raise HTTPException(e.status, str(e))
+
+
+@app.post("/api/challenge/start")
+def api_challenge_start(payload: dict = Body(...)):
+    return _ce(challenge.start, payload)
+
+
+@app.get("/api/challenge/{sid}")
+def api_challenge_get(sid: str):
+    def go():
+        doc = challenge.load(sid)
+        if not doc:
+            raise challenge.ChallengeError("还没有开始挑战", 404)
+        return challenge.view(doc)
+    return _ce(go)
+
+
+@app.post("/api/challenge/{sid}/checkin")
+def api_challenge_checkin(sid: str, payload: dict = Body(...)):
+    return _ce(challenge.checkin, sid, payload)
+
+
+@app.post("/api/challenge/{sid}/interest")
+def api_challenge_interest(sid: str, payload: dict = Body(...)):
+    return _ce(challenge.set_interest, sid, payload)
+
+
+@app.post("/api/challenge/{sid}/advance")
+def api_challenge_advance(sid: str):
+    return _ce(challenge.advance, sid)
 
 
 @app.get("/form")
