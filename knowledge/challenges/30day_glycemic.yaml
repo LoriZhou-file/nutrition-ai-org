@@ -1,0 +1,691 @@
+# 30 天控糖自我管理：任务库（草案 v0.1）
+#
+# 状态：待营养师和医生审核。以下内容是项目组草拟，不是审核后的专业内容。
+# 对应设计稿：30天自我管理任务库 初稿（2026-11-26）。
+#
+# 设计原则：
+#   1. 每天只做一件小事，不要求节食，不要求记录数值。
+#   2. 全部任务是“换、排序、规律、增加”，没有“少吃、跳餐、禁食、减药”。
+#   3. 用药人群和特殊人群不拦人，只多一层提示或替换（见 special、note_conservative、note_hypo）。
+#   4. 运动任务（exercise: true）需要第 1 天确认“医生允许我运动”后才开启，对所有人适用。
+#   5. 运动时长和动作是草稿，必须由医生和营养师审核。
+#   6. kb_refs 指向 knowledge/ 下已有的知识单元；审核前不得对外宣称依据。
+#
+# 任务字段
+#   kind        任务类别：confirm 确认、diet 饮食、walk 散步、resist 力量练习、aware 觉察、review 复盘、measure 数据
+#   exercise    true 表示运动任务，运动确认前显示为“先问问医生”
+#   note_conservative  所有用药人群看到的提示
+#   note_hypo          使用胰岛素、磺脲类、格列奈类或不确定药物类型的人看到的低血糖提示
+#   special     特殊人群处理。replace 覆盖对应字段，note 追加一条提示
+
+_notes:
+  med: &n_med 吃药和进餐安排听医生的，不要因为任务自己改动用药。
+  hypo: &n_hypo 不要空腹运动，随身带含糖食物。出现心慌、手抖、出冷汗，立即停下，按医生教你的方法处理并联系医生。
+  hypo_walk: &n_hypo_walk 不要空腹散步，随身带含糖食物，有不适立即停下。出现心慌、手抖、出冷汗，请按医生教你的方法处理并联系医生。
+  indiv: &n_indiv 你的情况需要医生制定个体化的饮食和运动方案，请先和主治医生确认。
+  no_count: &n_no_count 不用数份量，按医生或营养师的安排吃就好。
+
+id: 30day-glycemic
+version: "0.1"
+status: pending_review
+title: 30 天控糖自我管理
+subtitle: 每天只做一件小事，饮食、餐后散步、力量练习一步一步加
+common_footer: 不确定能不能做，先问你的医生或营养师。
+
+exercise_confirm:
+  key: exercise_ok
+  yes: 医生允许我运动
+
+weeks:
+  - {week: 1, title: 起步，饮食和运动一起开始, days: [1, 7]}
+  - {week: 2, title: 补齐饮食，巩固运动, days: [8, 14]}
+  - {week: 3, title: 外食、饮酒和作息觉察, days: [15, 21]}
+  - {week: 4, title: 整合与复盘, days: [22, 30]}
+
+kind_labels:
+  diet: 饮食
+  walk: 餐后散步
+  resist: 力量练习
+  aware: 觉察
+  review: 复盘
+
+drug_options:
+  - {id: none, label: 没有使用}
+  - {id: metformin, label: 二甲双胍}
+  - {id: sulfonylurea, label: 格列美脲、格列齐特等（名字里有“格列”的磺脲类）}
+  - {id: glinide, label: 瑞格列奈、那格列奈（格列奈类）}
+  - {id: other_oral, label: 其他口服降糖药}
+  - {id: insulin, label: 胰岛素}
+  - {id: unsure, label: 不确定药名或类型}
+
+notices:
+  hypo:
+    title: 关于低血糖，请先了解
+    text: 使用胰岛素、磺脲类或格列奈类药物时，饮食和运动的变化可能引起低血糖。常见表现有心慌、手抖、出冷汗、饥饿感、头晕。出现这些情况，请按医生交代的方式处理，并告诉医生。运动前不要空腹，随身带含糖食物。如果你不确定自己的药属于哪一类，也请按这个提示做，并看一下药盒或问医生。
+    ack: 我已了解
+  special:
+    title: 特别提示
+    text: 你的情况需要医生制定个体化的饮食和运动方案。本工具只提供一般性的生活方式小任务，不能替代医生的指导。请先和主治医生确认哪些安排适合你，任务与医嘱不一致时，以医嘱为准，可以随时跳过任务，出现不适请及时联系医生。
+    ack: 我已了解
+  guardian:
+    text: 未满 18 岁需要监护人同意后才能参加，请和监护人一起使用。
+  exercise_gate_task: 这项运动任务先不开启。请先问问医生是否适合你运动。
+  exercise_gate_why: 运动前先确认医生同意，对你更安全。
+  exercise_gate_how: 问清楚之后，回到第 1 天，更新“医生是否允许你运动”的回答，这项任务就会开启。
+  exercise_gate_button: 我知道了
+
+statuses:
+  done: 做到了
+  partial: 做了一部分
+  skipped: 没做到
+
+barriers:
+  - {id: forgot, label: 忘了}
+  - {id: no_time, label: 没时间}
+  - {id: eating_out, label: 在外面吃，不方便}
+  - {id: dislike, label: 不太想做}
+  - {id: unwell, label: 今天身体不舒服}
+  - {id: other, label: 其他}
+  - {id: need_doctor, label: 先问医生, internal: true}
+
+barrier_tips:
+  forgot: 可以把任务设成饭前的小提醒，或者记在手机便签里。
+  no_time: 这件事不需要额外时间，下一顿饭就能顺手做。
+  eating_out: 外面吃也能做，点餐时多选一份蔬菜类就行。
+  dislike: 不想做也很正常。换成你觉得最容易的一种方式，做一点点就好。
+  unwell: 身体不舒服的时候不用勉强。如果持续不舒服，请联系医生。
+  other: 谢谢你告诉我们，这会帮助我们把方案设计得更贴近你。
+  need_doctor: 先问问医生是否适合你运动，问清楚后回到第 1 天更新回答。
+
+feedback:
+  done: 做到了，这就是最难的一步。
+  partial: 做一部分也算数，开始了就比不做强。
+  skipped: 没关系，一天没做到不影响整体。
+  skipped_tail: 明天继续，或者之后找个时间补上。
+
+tasks:
+  # ---------------------------------------------------------------- 第 1 周
+  - day: 1
+    kind: confirm
+    title: 先看看，不用改；确认能不能运动
+    task: 今天做两件小事：留意你吃了什么，不用改任何东西；再确认医生是否允许你运动。
+    why: 知道自己现在怎么吃，才知道从哪里改最省力；运动前先问医生，对你更安全。
+    how: 睡前花一分钟回想今天的三餐。如果还没问过医生能不能运动，就先选“还没问过医生”，问清楚后可以回来更新。
+    note_conservative: *n_med
+    question:
+      text: 医生是否允许你运动？
+      key: exercise_ok
+      options: [医生允许我运动, 还没问过医生, 医生说暂时不要运动]
+    kb_refs: [KB00-009]
+    done_msg: 先看清楚，再确认安全，后面就好做了。
+    partial_msg: 想起来多少记多少就行。
+    special:
+      eating_disorder:
+        replace:
+          title: 先看看今天的作息；确认能不能运动
+          task: 今天做两件小事：留意你今天几点起、几点睡、几点吃饭，不用改任何东西；再确认医生是否允许你运动。
+          why: 先了解自己的作息节奏，运动前先问医生，对你更安全。
+          how: 睡前花一分钟回想今天的作息，不需要记录吃了什么。
+        note: *n_indiv
+      severe_kidney: {note: *n_indiv}
+      type1: {note: *n_indiv}
+      pregnant_lactating: {note: *n_indiv}
+      minor: {note: *n_indiv}
+
+  - day: 2
+    kind: diet
+    title: 先吃蔬菜
+    task: 今天有一餐，先吃完一份蔬菜，再吃肉蛋，最后吃主食。
+    why: 先蔬菜、再蛋白质、最后主食，是不改变总量的吃法，有助于让餐后血糖更平稳，也更容易饱。
+    how: 选哪一餐都行，外卖也可以。吃饭时先把蔬菜吃完，再吃其他。
+    note_conservative: *n_med
+    question:
+      text: 你选的是哪一餐？
+      key: veg_first_meal
+      options: [早餐, 午餐, 晚餐]
+    kb_refs: [KB02-004, KB00-004]
+    done_msg: 这个小习惯坚持下来，变化会慢慢出现。
+    partial_msg: 吃了几口蔬菜先垫一下，也有帮助。
+    special:
+      severe_kidney:
+        replace:
+          title: 留意进餐顺序
+          task: 今天只留意你吃饭的先后顺序，不用改变，进餐按医生或营养师的安排来。
+          why: 你的情况需要医生制定个体化的饮食方案，我们这里只做观察。
+          how: 饭后想一想，今天每一餐你是先吃什么、后吃什么。
+          question:
+            text: 你今天先吃的大多是什么？
+            key: eat_first
+            options: [蔬菜, 肉蛋豆制品, 主食, 说不清]
+
+  - day: 3
+    kind: walk
+    exercise: true
+    title: 餐后散步试一试
+    task: 今天选一餐，饭后慢走一会儿，能走多久走多久，目标大约 10 分钟。
+    why: 饭后适度活动，有助于让餐后血糖更平稳，也是最容易开始的运动。
+    how: 选最方便的一餐，饭后先休息一会儿，再慢慢走。不用快走，不用出汗。
+    note_conservative: *n_med
+    note_hypo: *n_hypo_walk
+    question:
+      text: 你选的是哪一餐后？
+      key: walk_meal
+      options: [早餐后, 午餐后, 晚餐后]
+    kb_refs: []
+    done_msg: 动起来，就是好的开始。
+    partial_msg: 走几分钟也算数。
+
+  - day: 4
+    kind: resist
+    exercise: true
+    title: 力量练习第 1 次
+    task: 今天做一次很轻的力量练习，大约 10 到 15 分钟：椅子深蹲和靠墙俯卧撑，每个做几次，感觉轻松就行。
+    why: 肌肉是身体处理血糖的重要场所之一，力量练习帮助保住和增加肌肉。
+    how: 椅子深蹲是坐下再站起；靠墙俯卧撑是面对墙，双手撑墙推起。动作放慢，不憋气，有不舒服就停下。
+    note_conservative: *n_med
+    note_hypo: *n_hypo
+    question:
+      text: 今天做了哪些动作？
+      key: resist_moves
+      options: [椅子深蹲, 靠墙俯卧撑, 两个都做了, 只做了一点]
+    kb_refs: []
+    done_msg: 第一次最难，你已经做到了。
+    partial_msg: 做一点点也算数。
+
+  - day: 5
+    kind: diet
+    title: 早餐加一份蛋白质
+    task: 今天早餐加一份蛋白质：鸡蛋、无糖豆浆、牛奶或豆腐都可以，饭后继续散步一会儿。
+    why: 只吃粥、面包、包子这类精制主食的早餐，容易饿，餐后血糖也容易升得快。
+    how: 在你平时的早餐上加一样就行，不用换掉原来的。
+    note_conservative: *n_med
+    question:
+      text: 你加的是什么？
+      key: breakfast_protein
+      options: [鸡蛋, 豆浆或牛奶, 豆腐或豆制品, 其他, 我不吃早餐]
+    kb_refs: [KB00-002]
+    done_msg: 早餐有蛋白质，上午会更扛饿。
+    partial_msg: 加一点点也有帮助。
+    special:
+      severe_kidney:
+        replace:
+          title: 留意早餐
+          task: 今天早餐按医生或营养师的安排吃，只留意一下你吃了什么。
+          why: 蛋白质的安排需要医生个体化指导，我们这里只做观察。
+          how: 想一想今天早餐吃了哪些东西，不用改变。
+          question:
+            text: 你今天早餐吃的主要是什么？
+            key: breakfast_seen
+            options: [粥或面食, 蛋奶豆制品, 水果或点心, 我不吃早餐]
+      pregnant_lactating:
+        note: 早餐里蛋白质的安排，请听医生或营养师的。
+
+  - day: 6
+    kind: resist
+    exercise: true
+    title: 力量练习第 2 次
+    task: 今天做第 2 次很轻的力量练习，仍是大约 10 到 15 分钟：把椅子深蹲和靠墙俯卧撑做一遍，再加一个臀桥。
+    why: 每周做两次，肌肉才会慢慢有变化，动作稳比次数更重要。
+    how: 臀桥是躺下，膝盖弯曲，慢慢抬起臀部再放下。动作放慢，不憋气，有不舒服就停下。
+    note_conservative: *n_med
+    note_hypo: *n_hypo
+    question:
+      text: 今天感觉怎么样？
+      key: resist_feel
+      options: [轻松, 有点累, 不舒服]
+    kb_refs: []
+    done_msg: 这一周的两次都做到了，很不错。
+    partial_msg: 做一部分也很好，下周接着来。
+
+  - day: 7
+    kind: review
+    title: 复盘，选一件坚持
+    task: 回头看看这一周，选一件你最容易坚持的事，继续做下去，并记下运动之后的感觉。
+    why: 能长期坚持的小事，比一次做很多更有用。
+    how: 想想这几天哪件事你做起来最顺手，就把它留下来。
+    note_conservative: *n_med
+    question:
+      text: 你最想继续做的是哪一件？
+      key: keep_week1
+      options: [先吃蔬菜, 餐后散步, 轻量力量练习, 早餐加蛋白质, 都想试试]
+    kb_refs: []
+    done_msg: 选一件做下去，比什么都想改更容易成功。
+    partial_msg: 想好一件就行，不用急。
+
+  # ---------------------------------------------------------------- 第 2 周
+  - day: 8
+    kind: diet
+    title: 饮料换一换
+    task: 把今天的一杯含糖饮料，换成白水、淡茶或无糖茶，饭后继续散步一会儿。
+    why: 饮料里的糖吸收很快，是比较容易被忽视的血糖波动来源。
+    how: 奶茶、果汁、可乐、甜茶饮都算。不用全戒，今天换一杯就够了。
+    note_conservative: 如果你正出现心慌、出冷汗等不舒服，请按医生教你的方法处理，今天不用做这个任务。
+    question:
+      text: 你换掉的是哪一种？
+      key: swapped_drink
+      options: [奶茶, 果汁, 可乐汽水, 其他甜饮, 我本来就不喝]
+    kb_refs: [KB02-002]
+    done_msg: 换掉一杯，就已经少了一个血糖波动的来源。
+    partial_msg: 先从换掉半杯开始也行。
+
+  - day: 9
+    kind: resist
+    exercise: true
+    title: 力量练习第 3 次
+    task: 今天做第 3 次力量练习，大约 15 到 20 分钟：前面的动作做一遍，再学一个新动作，弹力带划船。
+    why: 时长从短到长慢慢加，身体更容易适应。
+    how: 坐着，把弹力带绕在脚上，双手拉带向后，像划船。没有弹力带，今天就把前面的动作多做一轮。
+    note_conservative: *n_med
+    note_hypo: *n_hypo
+    question:
+      text: 今天感觉怎么样？
+      key: resist_feel
+      options: [轻松, 有点累, 不舒服]
+    kb_refs: []
+    done_msg: 又多会了一个动作。
+    partial_msg: 做一部分也很好。
+
+  - day: 10
+    kind: diet
+    title: 主食搭配一下
+    task: 有一餐，把一部分白米饭或白面，换成杂粮、薯类或豆类，份量和平时差不多。
+    why: 粗细搭配的主食消化得更慢，饱腹感也更好。
+    how: 比如米饭里加一把糙米或红豆，或者用一小块蒸红薯、玉米换掉一部分主食。
+    note_conservative: 总量保持和平时差不多，不要因此少吃。
+    question:
+      text: 你用的是哪一种？
+      key: grain_swap
+      options: [杂粮饭, 薯类或玉米, 豆类, 没找到合适的]
+    kb_refs: [KB00-001, KB00-004, KB02-002]
+    done_msg: 粗细搭配，是很容易长期坚持的一种改法。
+    partial_msg: 换一小部分就是好的开始。
+    special:
+      severe_kidney:
+        replace:
+          title: 留意主食
+          task: 今天主食按医生或营养师的安排吃，只留意一下你吃的是什么主食。
+          why: 主食的选择需要医生个体化指导，我们这里只做观察。
+          how: 想一想今天每一餐的主食是什么，不用改变。
+          question:
+            text: 你今天吃的主要是什么主食？
+            key: staple_seen
+            options: [米饭, 面食, 粥, 杂粮或薯类, 说不清]
+      eating_disorder:
+        note: *n_no_count
+
+  - day: 11
+    kind: walk
+    exercise: true
+    title: 散步增加到两餐
+    task: 今天午餐后和晚餐后各慢走一次，每次大约 10 分钟。
+    why: 把活动放在每次吃饭之后，是最容易养成的习惯。
+    how: 饭后先休息一会儿再走，慢慢走就行。
+    note_conservative: *n_med
+    note_hypo: *n_hypo_walk
+    question:
+      text: 你走了几次？
+      key: walk_times
+      options: [两次, 一次, 没走成]
+    kb_refs: []
+    done_msg: 两餐都动起来了。
+    partial_msg: 走一次也很好。
+
+  - day: 12
+    kind: resist
+    exercise: true
+    title: 力量练习第 4 次
+    task: 今天做本周第 2 次力量练习，大约 15 到 20 分钟：已学的动作各做一轮。
+    why: 稳定的节奏比一次做很多更重要。
+    how: 动作放慢，不憋气，有不舒服就停下。
+    note_conservative: *n_med
+    note_hypo: *n_hypo
+    question:
+      text: 今天感觉怎么样？
+      key: resist_feel
+      options: [轻松, 有点累, 不舒服]
+    kb_refs: []
+    done_msg: 这一周的两次都做到了。
+    partial_msg: 做一部分也很好。
+
+  - day: 13
+    kind: diet
+    title: 吃饭尽量定时
+    task: 今天三餐尽量定时，晚餐不要拖得太晚，也不要省略任何一餐。
+    why: 吃饭时间和每餐的量比较稳定，血糖更容易平稳。
+    how: 不用精确到分钟，大致固定就行。饿了就吃，不要硬撑。
+    note_conservative: 吃药和进餐时间以医嘱为准，不要因为任务改动用药时间，也不要为了“少吃”而省略一餐。
+    question:
+      text: 你的晚餐大概在几点？
+      key: dinner_time_band
+      options: [18点前, 18到20点, 20点以后]
+    kb_refs: [KB00-009]
+    done_msg: 规律是血糖管理里很被低估的一件事。
+    partial_msg: 有一两餐准时也是进步。
+    special:
+      type1:
+        note: 不要省略任何一餐，用餐和用药的时间听医生的。
+
+  - day: 14
+    kind: review
+    title: 第 2 周复盘
+    task: 回看这一周，你的力量练习和散步各做了几天，哪一项最容易做到。
+    why: 知道哪件事最顺手，下一步才知道往哪里使劲。
+    how: 想一想这一周里，哪一件事你几乎不用提醒就做了。
+    note_conservative: *n_med
+    question:
+      text: 这一周最容易做到的是哪一项？
+      key: easiest_week2
+      options: [餐后散步, 力量练习, 饮食安排, 都差不多]
+    kb_refs: []
+    done_msg: 看清楚了，下一周就好安排了。
+    partial_msg: 想到多少算多少。
+
+  # ---------------------------------------------------------------- 第 3 周
+  - day: 15
+    kind: diet
+    title: 外食也能选
+    task: 今天如果在外面吃，点一份蔬菜或豆制品，主食搭配着吃，饭后散一会儿步。
+    why: 外食占了很多人的大部分三餐，学会点餐，比在家里控制更实用。
+    how: 点餐时先选一份蔬菜或豆腐类，再选主食和肉蛋。今天没有外食，就按平时的饭后散步做。
+    note_conservative: *n_med
+    question:
+      text: 你点了什么？
+      key: eat_out_pick
+      options: [蔬菜, 豆制品, 都点了, 今天没在外面吃]
+    kb_refs: [KB02-004, KB00-004]
+    done_msg: 外面吃也能吃得稳。
+    partial_msg: 点一样就是进步。
+    special:
+      severe_kidney:
+        note: 食物的选择请按医生或营养师的安排。
+      eating_disorder:
+        note: *n_no_count
+
+  - day: 16
+    kind: resist
+    exercise: true
+    title: 力量练习第 5 次
+    task: 今天做本周第 1 次力量练习，大约 20 到 30 分钟：已学的动作各做一轮。
+    why: 时长慢慢增加，身体适应了，再往上加一点。
+    how: 动作放慢，不憋气，有不舒服就停下。
+    note_conservative: *n_med
+    note_hypo: *n_hypo
+    question:
+      text: 今天感觉怎么样？
+      key: resist_feel
+      options: [轻松, 有点累, 不舒服]
+    kb_refs: []
+    done_msg: 本周开了个好头。
+    partial_msg: 做一部分也很好。
+
+  - day: 17
+    kind: walk
+    exercise: true
+    title: 不方便时的替代
+    task: 雨天或太晚时，不出门也能动：在室内走动或站立活动几分钟。
+    why: 找到替代方案，习惯就不容易被打断。
+    how: 饭后在家里来回走几分钟，或者站着做一会儿家务。
+    note_conservative: *n_med
+    note_hypo: *n_hypo_walk
+    question:
+      text: 你用的是哪一种方式？
+      key: indoor_move
+      options: [室内走动, 站着做家务, 原本就出门散步了, 没动成]
+    kb_refs: []
+    done_msg: 不出门也能动，很好。
+    partial_msg: 动几分钟也算数。
+
+  - day: 18
+    kind: aware
+    title: 饮酒觉察
+    task: 今天记一下：有没有喝酒？喝了几杯？不评判，也不要求戒酒。
+    why: 知道自己喝了多少，之后和医生聊起来才更具体。
+    how: 回想今天是否喝过酒，选一个最接近的。具体能不能喝、喝多少，听医生的。
+    note_conservative: 饮酒和降糖药一起用需要注意，具体听医生的。
+    question:
+      text: 今天的饮酒情况？
+      key: alcohol_today
+      options: [没喝, 1杯以内, 2到3杯, 更多]
+    kb_refs: []
+    done_msg: 看清楚就是第一步。
+    partial_msg: 想起来多少记多少。
+    special:
+      pregnant_lactating:
+        replace:
+          title: 留意今天的饮品
+          task: 今天留意一下你喝了哪些饮品。
+          why: 知道自己喝了什么，才知道哪里可以换。
+          how: 回想今天喝过的水、茶、奶、饮料，选一个最主要的。
+          question:
+            text: 今天主要喝了什么？
+            key: drink_today
+            options: [白水, 茶, 奶或豆浆, 含糖饮料, 其他]
+      minor:
+        replace:
+          title: 留意今天的饮品
+          task: 今天留意一下你喝了哪些饮品。
+          why: 知道自己喝了什么，才知道哪里可以换。
+          how: 回想今天喝过的水、茶、奶、饮料，选一个最主要的。
+          question:
+            text: 今天主要喝了什么？
+            key: drink_today
+            options: [白水, 茶, 奶或豆浆, 含糖饮料, 其他]
+
+  - day: 19
+    kind: resist
+    exercise: true
+    title: 力量练习第 6 次
+    task: 今天做本周第 2 次力量练习，大约 20 到 30 分钟：选一个动作稍微加一点难度，比如多做几次，或者放得更慢。
+    why: 加一点点难度，肌肉才会继续有进步。
+    how: 只加一个动作的难度，其他保持不变，有不舒服就停下。
+    note_conservative: *n_med
+    note_hypo: *n_hypo
+    question:
+      text: 今天感觉怎么样？
+      key: resist_feel
+      options: [轻松, 有点累, 不舒服]
+    kb_refs: []
+    done_msg: 又往前走了一步。
+    partial_msg: 做一部分也很好。
+
+  - day: 20
+    kind: aware
+    title: 作息觉察
+    task: 今天记一下：大约几点睡觉，几点吃饭，看看生活是否规律。
+    why: 睡眠和进餐的节奏，会影响第二天的状态和食欲。
+    how: 睡前想一想今天的睡觉和吃饭时间，选一个最接近的。
+    note_conservative: *n_med
+    question:
+      text: 今天大概几点睡？
+      key: bedtime_band
+      options: [22点前, 22到24点, 24点以后]
+    kb_refs: [KB00-009]
+    done_msg: 知道自己的节奏，就有办法调整。
+    partial_msg: 想起来多少算多少。
+
+  - day: 21
+    kind: review
+    title: 第 3 周复盘
+    task: 回看这一周，你的力量练习和散步各做了几天，哪里不舒服。
+    why: 不舒服的地方，是下一步最需要调整的地方。
+    how: 想一想这一周哪件事最难坚持，哪里有不舒服。
+    note_conservative: *n_med
+    question:
+      text: 这一周最难坚持的是哪一项？
+      key: hardest_week3
+      options: [餐后散步, 力量练习, 饮食安排, 都还好]
+    kb_refs: []
+    done_msg: 看清楚困难，才能想办法。
+    partial_msg: 想到多少算多少。
+
+  # ---------------------------------------------------------------- 第 4 周及收尾
+  - day: 22
+    kind: diet
+    exercise: true
+    title: 三件事合一天
+    task: 今天把三件事都试一遍：先吃蔬菜，早餐加一份蛋白质，饭后散步一会儿。
+    why: 把前面学的小事放到同一天，看看能不能自然地做下来。
+    how: 不用做到完美，每件事做一点就行。
+    note_conservative: *n_med
+    note_hypo: *n_hypo_walk
+    question:
+      text: 今天做了几件？
+      key: combo_count
+      options: [三件都做了, 做了两件, 做了一件]
+    kb_refs: [KB02-004, KB00-002]
+    done_msg: 三件事连起来，就是一个完整的好习惯。
+    partial_msg: 做两件也很好。
+    special:
+      severe_kidney:
+        replace:
+          title: 先吃蔬菜，饭后散步
+          task: 今天试两件事：进餐顺序和饮食按医生或营养师的安排，饭后散步一会儿。
+          why: 饮食的安排需要医生个体化指导，我们这里只做饭后散步。
+          how: 饭后先休息一会儿，再慢慢走。
+          question:
+            text: 今天饭后走了吗？
+            key: walk_after_meal
+            options: [走了, 走了一小会儿, 没走成]
+      eating_disorder:
+        note: *n_no_count
+
+  - day: 23
+    kind: resist
+    exercise: true
+    title: 力量练习第 7 次
+    task: 今天做本周第 1 次力量练习，大约 20 到 30 分钟：已学的动作各做一轮。
+    why: 把节奏稳住，比一次做很多更重要。
+    how: 动作放慢，不憋气，有不舒服就停下。
+    note_conservative: *n_med
+    note_hypo: *n_hypo
+    question:
+      text: 今天感觉怎么样？
+      key: resist_feel
+      options: [轻松, 有点累, 不舒服]
+    kb_refs: []
+    done_msg: 节奏稳住了。
+    partial_msg: 做一部分也很好。
+
+  - day: 24
+    kind: review
+    title: 选出最顺手的事
+    task: 回看前三周，选出你最顺手、最想继续的一件事。
+    why: 先把一件事稳稳地做下去，比什么都想做更容易成功。
+    how: 想一想哪件事你不太费力就做到了。如果有好几件，可以写在备注里。
+    note_conservative: *n_med
+    question:
+      text: 你最想继续做的是哪一件？
+      key: keep_one
+      options: [先吃蔬菜, 餐后散步, 力量练习, 早餐加蛋白质, 饮料换一换, 主食搭配, 吃饭定时, 都想继续]
+    kb_refs: []
+    done_msg: 选一件做下去，比什么都想改更容易成功。
+    partial_msg: 想好一件就行，不用急。
+
+  - day: 25
+    kind: review
+    title: 绕过一个障碍
+    task: 回看这几周，选一个你最常卡住的地方，想一个小办法。
+    why: 知道自己为什么卡住，才知道往哪里改。
+    how: 想一想最近没做到的那几天，主要是因为什么，再写一个小办法在备注里。
+    note_conservative: *n_med
+    question:
+      text: 你最常卡在哪里？
+      key: main_barrier
+      options: [忘了, 没时间, 在外面吃, 不太想做, 身体不舒服, 其他]
+    kb_refs: []
+    done_msg: 找到卡点，就有办法了。
+    partial_msg: 想到多少算多少。
+
+  - day: 26
+    kind: resist
+    exercise: true
+    title: 力量练习第 8 次
+    task: 今天做本周第 2 次力量练习，大约 20 到 30 分钟：动作做稳，比加量更重要。
+    why: 这个月的最后一次，把动作做稳。
+    how: 动作放慢，不憋气，有不舒服就停下。
+    note_conservative: *n_med
+    note_hypo: *n_hypo
+    question:
+      text: 今天感觉怎么样？
+      key: resist_feel
+      options: [轻松, 有点累, 不舒服]
+    kb_refs: []
+    done_msg: 这个月的力量练习做完了。
+    partial_msg: 做一部分也很好。
+
+  - day: 27
+    kind: walk
+    exercise: true
+    title: 散步和拉伸日
+    task: 今天保持饭后散步，如果肌肉有点酸，只做一些轻轻的拉伸。
+    why: 休息和恢复，也是运动的一部分。
+    how: 拉伸要慢，感觉到轻微拉紧就行，不要痛。
+    note_conservative: *n_med
+    note_hypo: *n_hypo_walk
+    question:
+      text: 今天做了什么？
+      key: rest_day
+      options: [饭后散步, 拉伸, 两样都做了, 都没做]
+    kb_refs: []
+    done_msg: 适当休息，才能走得更远。
+    partial_msg: 做一点就好。
+
+  - day: 28
+    kind: review
+    title: 第 4 周复盘
+    task: 回看这一周，你的力量练习和散步各做了几天，哪件事已经成了习惯。
+    why: 习惯形成的信号，是不用提醒也会去做。
+    how: 想一想这一周哪件事你几乎不用提醒。
+    note_conservative: *n_med
+    question:
+      text: 哪件事最像已经成了习惯？
+      key: habit_formed
+      options: [先吃蔬菜, 餐后散步, 力量练习, 早餐加蛋白质, 还没有]
+    kb_refs: []
+    done_msg: 习惯是一点点积累出来的。
+    partial_msg: 想到多少算多少。
+
+  - day: 29
+    kind: measure
+    title: 记录阶段数据
+    task: 如果方便，量一下体重和腰围，记在页面下方的记录里。有最近的化验结果，也可以告诉营养师。不填也可以。
+    why: 把现在的数据和第一次的对比，可以看到这个月观察到的变化。
+    how: 早上起床后，空腹，穿轻便衣服量。每次用同样的方法，结果才好对比。
+    note_conservative: 数值如果让你担心，请直接联系医生，我们这里不做解读。
+    question:
+      text: 这次的数据你打算怎么处理？
+      key: measure_choice
+      options: [已经记录了, 稍后补, 这次不填]
+    kb_refs: [KB01-001]
+    done_msg: 有数据，之后复盘就更清楚。
+    partial_msg: 先记一项也可以。
+    special:
+      eating_disorder:
+        replace:
+          title: 回看这个月的小变化
+          task: 今天不需要量体重或腰围，也不需要记录数字。回看这个月，你觉得有哪些小变化。
+          why: 关注自己的感受，比关注数字更重要。
+          how: 想一想这个月里，你的精神、睡眠、饮食的规律和活动有没有变化。
+          question:
+            text: 你觉得这个月最明显的小变化是？
+            key: felt_change
+            options: [更有精神, 睡得更好, 吃得更规律, 更愿意活动, 没有明显变化]
+
+  - day: 30
+    kind: review
+    title: 30 天复盘
+    task: 今天看看你的 30 天小结，再决定接下来怎么走。
+    why: 看见自己做到了什么，比什么都有动力。
+    how: 打开小结，看看哪一类任务最顺手，再选择接下来想怎么做。
+    note_conservative: *n_med
+    question:
+      text: 接下来你想怎么做？
+      key: next_step
+      options: [继续下一阶段, 先休息一阵, 想让营养师带着我]
+    kb_refs: []
+    done_msg: 这 30 天你完成了一件不容易的事。
+    partial_msg: 看一眼小结也很好。
+
+summary:
+  title: 你的 30 天小结
+  invite: 如果你想让营养师根据这 30 天的记录，和你一起把后面的方案想清楚，可以留个意向。试点阶段不收费，名额有限，我们会通知你。
