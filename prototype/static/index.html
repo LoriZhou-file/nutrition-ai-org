@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>7 天控糖小挑战</title>
+<title>30 天控糖小管理</title>
 <style>
 :root{--bg:#f6f8f6;--card:#fff;--ink:#1c2a22;--sub:#5d6b63;--line:#dde5df;--brand:#2f7d5b;--brand-ink:#fff;--soft:#e8f3ec;--warn:#8a5a00;--warn-bg:#fff4dc;--red:#a12f2f;--red-bg:#fdeaea;--half:#e0a93b}
 @media (prefers-color-scheme:dark){:root{--bg:#121816;--card:#1b2420;--ink:#e8efe9;--sub:#a3b1a9;--line:#2c3a33;--brand:#58b88a;--brand-ink:#0d1a13;--soft:#1f3328;--warn:#f0c46a;--warn-bg:#352a10;--red:#f19a9a;--red-bg:#3a1c1c;--half:#e0b25a}}
@@ -34,9 +34,9 @@ h2{font-size:18px;margin:6px 0;font-weight:600}
 .chip.on{border-color:var(--brand);color:var(--brand);background:var(--soft)}
 .chk{display:flex;gap:10px;align-items:flex-start;font-size:14px}.chk input{margin-top:5px}
 .err{color:var(--red);font-size:13px;min-height:1px;margin-top:6px}
-.dots{display:flex;gap:6px;justify-content:space-between;margin:4px 0 14px}
-.dot{flex:1;text-align:center;font-size:12px;color:var(--sub);background:none;border:0;padding:0;cursor:pointer;font:inherit}
-.dot i{display:block;width:100%;aspect-ratio:1;max-width:38px;margin:0 auto 4px;border-radius:50%;border:2px solid var(--line);background:var(--card);position:relative}
+.dots{display:grid;grid-template-columns:repeat(10,1fr);gap:6px 2px;margin:4px 0 12px}
+.dot{text-align:center;font-size:11px;color:var(--sub);background:none;border:0;padding:0;cursor:pointer;font:inherit}
+.dot i{display:block;width:100%;aspect-ratio:1;max-width:26px;margin:0 auto 1px;border-radius:50%;border:2px solid var(--line);background:var(--card);position:relative}
 .dot.done i{background:var(--brand);border-color:var(--brand)}
 .dot.partial i{background:linear-gradient(90deg,var(--half) 50%,var(--card) 50%);border-color:var(--half)}
 .dot.skipped i{border-style:dashed;border-color:var(--sub)}
@@ -53,6 +53,7 @@ h2{font-size:18px;margin:6px 0;font-weight:600}
 .small{font-size:12px;color:var(--sub)}
 input.t,textarea.t{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:8px}
 .sumline{margin:6px 0}
+.wk{border-left:3px solid var(--brand)}
 .foot{margin-top:18px;text-align:center}
 </style>
 </head>
@@ -63,12 +64,12 @@ input.t,textarea.t{width:100%;font:inherit;color:var(--ink);background:var(--bg)
 
 <!-- 开场 -->
 <section id="s_intro" class="on">
-  <h1>7 天控糖小挑战</h1>
-  <p class="sub">每天只做一件小事，不用节食，不用记数字。每天大约 1 分钟。</p>
+  <h1>30 天控糖小管理</h1>
+  <p class="sub">每天只做一件小事，不用节食，不用记数字。每天大约 1 分钟，每周给你一个小结。</p>
   <div class="card">
-    <div class="feat"><div class="num">1</div><div><b>每天一个小任务</b><span>先吃蔬菜、饮料换一换、早餐加蛋白质……都是生活里顺手能做的事</span></div></div>
+    <div class="feat"><div class="num">1</div><div><b>每天一个小任务</b><span>先吃蔬菜、饭后散步、轻量力量练习……都是生活里顺手能做的事</span></div></div>
     <div class="feat"><div class="num">2</div><div><b>点一下就能打卡</b><span>做到了、做了一部分、没做到，不用写文字，不用拍照</span></div></div>
-    <div class="feat"><div class="num">3</div><div><b>第 7 天拿到你的小结</b><span>看看哪件事最适合你，想继续的话可以让营养师带你</span></div></div>
+    <div class="feat"><div class="num">3</div><div><b>每周一个小结，30 天一个总结</b><span>看看哪件事最适合你，想继续的话可以让营养师带你</span></div></div>
   </div>
   <button class="btn" id="b_start">开始</button>
   <p class="small" style="text-align:center;margin-top:10px">我是 AI 营养助手，不是医生或营养师，不涉及药物调整。</p>
@@ -86,6 +87,13 @@ input.t,textarea.t{width:100%;font:inherit;color:var(--ink);background:var(--bg)
   <div class="card"><label class="chk"><input type="checkbox" id="consent"><span>我同意提供健康相关信息，用于生成每日任务和小结。不需要姓名和手机号，可以随时删除。</span></label></div>
   <div class="err" id="e_gate"></div>
   <button class="btn" id="b_go">开始挑战</button>
+</section>
+
+<!-- 一次性提示 -->
+<section id="s_notice">
+  <h2 id="ntTitle"></h2>
+  <div class="card"><p id="ntText" style="margin:0"></p></div>
+  <button class="btn" id="b_ack">我已了解</button>
 </section>
 
 <!-- 主页 -->
@@ -137,18 +145,34 @@ Q.forEach(([k,q])=>{const row=el('div','yn'); row.appendChild(el('span',null,q))
   row.appendChild(seg); $('gateList').appendChild(row);});
 [['没有使用','no'],['口服药','oral'],['胰岛素','insulin'],['口服药和胰岛素','oral_and_insulin'],['不确定','unsure']].forEach(([l,v])=>{
   const c=el('button','chip',l); c.type='button'; c.onclick=()=>{DRUG=v;[...$('drugChips').children].forEach(x=>x.classList.remove('on'));c.classList.add('on');}; $('drugChips').appendChild(c);});
-$('b_go').onclick=async()=>{
+let CFG=null, NOTICES=[];
+fetch('/api/challenge/config').then(r=>r.json()).then(c=>{CFG=c;}).catch(()=>{});
+function nextNotice(){
+  const n=NOTICES.shift(); if(!n) return startNow();
+  $('ntTitle').textContent=n.title; $('ntText').textContent=n.text; $('b_ack').textContent=n.ack||'我已了解'; show('s_notice');
+}
+$('b_ack').onclick=nextNotice;
+$('b_go').onclick=()=>{
   if(Q.some(([k])=>SCREEN[k]===undefined)||!DRUG){$('e_gate').textContent='请逐项选择';return;}
   if(!$('consent').checked){$('e_gate').textContent='需要先勾选同意才能继续';return;}
-  $('e_gate').textContent=''; $('b_go').disabled=true;
+  $('e_gate').textContent='';
+  NOTICES=[];
+  if(CFG&&CFG.notices){
+    if(DRUG!=='no') NOTICES.push(CFG.notices.hypo);
+    if(SCREEN.pregnant_or_lactating||SCREEN.type1_diabetes||SCREEN.severe_kidney_or_eating_disorder) NOTICES.push(CFG.notices.special);
+  }
+  nextNotice();
+};
+async function startNow(){
+  $('b_go').disabled=true;
   try{
     SID=SID||NEW_SID();
     ST=await api('/api/challenge/start',{session_id:SID,consent:true,screening:SCREEN,uses_glucose_lowering_drug:DRUG,source:new URLSearchParams(location.search).get('src')||'challenge'});
     try{localStorage.setItem(SID_KEY,SID);}catch(e){}
     SEL=null; render();
-  }catch(e){ if(e.status===403){$('refMsg').textContent=e.message; show('s_ref');} else $('e_gate').textContent=e.message; }
+  }catch(e){ if(e.status===403){$('refMsg').textContent=e.message; show('s_ref');} else {$('e_gate').textContent=e.message; show('s_gate');} }
   finally{$('b_go').disabled=false;}
-};
+}
 
 // ---- 主页
 function render(){
@@ -156,7 +180,7 @@ function render(){
   const day=SEL||ST.current_day; SEL=day;
   const dots=$('dots'); dots.replaceChildren();
   ST.days.forEach(d=>{const b=el('button','dot '+(d.status||'')+(d.unlocked?'':' locked')+(d.day===ST.current_day?' cur':'')+(d.day===day?' sel':'')); b.type='button';
-    b.appendChild(el('i')); b.appendChild(document.createTextNode('第'+d.day+'天')); if(d.unlocked) b.onclick=()=>{SEL=d.day; FB={}; render();}; dots.appendChild(b);});
+    b.appendChild(el('i')); b.appendChild(document.createTextNode(String(d.day))); if(d.unlocked) b.onclick=()=>{SEL=d.day; FB={}; render();}; dots.appendChild(b);});
   const t=ST.tasks[day], ck=ST.checkins[day], card=$('taskCard'); card.replaceChildren(); $('after').replaceChildren();
   const head=el('div'); head.appendChild(el('span','tag',day===ST.current_day?'今天的小任务':'第 '+day+' 天的任务')); head.appendChild(el('span','small','  '+t.title)); card.appendChild(head);
   card.appendChild(el('div','task',t.task));
@@ -166,8 +190,9 @@ function render(){
   if(ck){ renderDone(card,t,ck,day); }
   else renderButtons(card,t,day);
   $('footer').textContent=ST.footer;
-  $('b_demo').style.display=(DEMO&&ST.demo&&ST.current_day<7)?'inline-block':'none';
-  if(ST.summary && day===7 && ST.checkins[7]) renderSummary();
+  $('b_demo').style.display=(DEMO&&ST.demo&&ST.current_day<ST.days_total)?'inline-block':'none';
+  renderWeekly(day);
+  if(ST.summary && day===ST.days_total && ST.checkins[ST.days_total]) renderSummary();
   show('s_home');
 }
 
@@ -201,7 +226,7 @@ function renderDone(card,t,ck,day){
   card.appendChild(row);
   const a=$('after'), f=FB[day];
   if(f){const box=el('div','fb'); f.notices.forEach(n=>box.appendChild(el('p','small',n))); box.appendChild(el('p',null,f.feedback)); if(f.ai) box.appendChild(el('p',null,f.ai)); a.appendChild(box);}
-  if(day===ST.current_day && day<7){
+  if(day===ST.current_day && day<ST.days_total){
     const nxt=el('div','card'); nxt.appendChild(el('b',null,'明天见')); nxt.appendChild(el('div','small','明天的小任务：「'+ST.days[day].title+'」。不用急，做完今天的就够了。')); a.appendChild(nxt);
   }
   if(!ck.note){
@@ -214,7 +239,16 @@ function renderDone(card,t,ck,day){
   }
 }
 
-// ---- 7 天小结
+// ---- 每周小结
+function renderWeekly(day){
+  const w=(ST.weekly||[]).find(x=>day>=x.days[0]&&day<=x.days[1]&&day===x.days[1]);
+  if(!w) return;
+  const box=el('div','card wk'); box.appendChild(el('h2',null,'第 '+w.week+' 周小结'));
+  w.lines.forEach(l=>box.appendChild(el('p','sumline',l)));
+  $('after').appendChild(box);
+}
+
+// ---- 30 天总结
 function renderSummary(){
   const s=ST.summary, a=$('after'); const box=el('div','card'); box.appendChild(el('h2',null,s.title));
   s.lines.forEach(l=>box.appendChild(el('p','sumline',l)));

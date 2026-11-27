@@ -1,6 +1,7 @@
-"""7 天控糖小挑战（雏形）。
+"""30 天控糖自我管理（雏形）。
 
-- 任务与话术来自 knowledge/challenges/7day_glycemic.yaml（待营养师审核）。
+- 任务与话术来自 knowledge/challenges/30day_glycemic.yaml（待营养师和医生审核）。
+- 每周日（第 7、14、21、28 天）出一次生活小结，第 30 天出总结。
 - 档案就是打卡记录本身：每次打卡补充行为、障碍和一个点选答案，不需要用户打字或填数值。
 - 反馈以模板为主；只有用户写了备注时，才让模型回应一句，并过输出校验。
 - 备注先过风险规则；出现红级信号后暂停挑战。
@@ -22,10 +23,11 @@ from . import chat, guard, llm, prompts, rules
 
 BASE = pathlib.Path(__file__).resolve().parent
 DATA = BASE / "data"
-CONTENT = BASE.parent / "knowledge" / "challenges" / "7day_glycemic.yaml"
+CONTENT = BASE.parent / "knowledge" / "challenges" / "30day_glycemic.yaml"
 SCHEMA = json.loads((BASE.parent / "schemas" / "user_profile.schema.json").read_text(encoding="utf-8"))
 TZ = ZoneInfo("Asia/Shanghai")
-DAYS = 7
+DAYS = 30
+WEEK_ENDS = (7, 14, 21, 28)
 DRUG_VALUES = chat.DRUG_VALUES
 
 
@@ -91,8 +93,8 @@ def start(payload: dict) -> dict:
     if any(v is None for v in sc.values()):
         raise ChallengeError("请完成全部安全确认")
     screening = {k: bool(v) for k, v in sc.items()}
-    if rules.screen(screening)["referred"]:
-        raise ChallengeError("根据你的情况，目前不适合参加。" + rules.message("MSG-EXCL"), 403)
+    if screening["adult"] is not True:
+        raise ChallengeError("本工具面向成年人。" + rules.message("MSG-EXCL"), 403)
     drug = payload.get("uses_glucose_lowering_drug")
     if drug not in DRUG_VALUES:
         raise ChallengeError("请选择是否在使用降糖药物")
@@ -138,49 +140,103 @@ def _task_view(doc: dict, day: int) -> dict:
     q = t.get("question")
     v = {"day": day, "title": t["title"], "task": t["task"], "why": t["why"], "how": t["how"],
          "question": {"text": q["text"], "options": q["options"]} if q else None}
-    if doc["mode"] == "conservative" and t.get("note_conservative"):
-        v["note"] = t["note_conservative"]
+    if doc["mode"] == "conservative":
+        note = t.get("note_hypo") or t.get("note_conservative")
+        if note:
+            v["note"] = note
+    v["kind"] = t.get("kind")
     return v
 
 
-def summary(doc: dict) -> dict | None:
-    cks = doc["challenge"]["checkins"]
-    if not _checkin(doc, DAYS):
-        return None
-    c = content()
+def _stats(cks: list[dict]) -> dict:
     done = [k for k in cks if k["status"] == "done"]
     partial = [k for k in cks if k["status"] == "partial"]
     skipped = [k for k in cks if k["status"] == "skipped"]
-    barrier_labels = {b["id"]: b["label"] for b in c["barriers"]}
     counts: dict[str, int] = {}
     for k in skipped:
         if k.get("barrier"):
             counts[k["barrier"]] = counts.get(k["barrier"], 0) + 1
-    top_barrier = barrier_labels[max(counts, key=counts.get)] if counts else None
-    best_days = [k["day"] for k in done if k["day"] != DAYS]
-    easiest = _task(best_days[0])["title"] if best_days else None
-    keep = next((k["answer"] for k in cks if k["day"] == DAYS and k.get("answer")), None)
-    lines = [f"7 天里，你有 {len(done)} 天做到了，{len(partial)} 天做了一部分，{len(skipped)} 天没做到。"]
-    if easiest:
-        lines.append(f"你最顺手的是「{easiest}」。")
-    if top_barrier:
-        lines.append(f"最常遇到的阻碍是「{top_barrier}」。")
+    labels = {b["id"]: b["label"] for b in content()["barriers"]}
+    top = labels[max(counts, key=counts.get)] if counts else None
+    return {"done": len(done), "partial": len(partial), "skipped": len(skipped), "top_barrier": top}
+
+
+def _by_kind(cks: list[dict]) -> dict[str, int]:
+    """各类任务里“做到了或做了一部分”的天数。"""
+    out: dict[str, int] = {}
+    for k in cks:
+        if k["status"] in ("done", "partial"):
+            kind = _task(k["day"]).get("kind")
+            if kind:
+                out[kind] = out.get(kind, 0) + 1
+    return out
+
+
+def weekly(doc: dict) -> list[dict]:
+    """已经走完的每一周的生活小结（第 7、14、21、28 天）。"""
+    cur = current_day(doc)
+    cks = doc["challenge"]["checkins"]
+    kind_labels = content()["kind_labels"]
+    out = []
+    for w in content()["weeks"]:
+        first, last = w["days"]
+        if not (_checkin(doc, last) or cur > last):
+            continue
+        week_cks = [k for k in cks if first <= k["day"] <= last]
+        st = _stats(week_cks)
+        n = last - first + 1
+        lines = [f"第 {w['week']} 周（第 {first} 到 {last} 天）：{n} 天里，你有 {st['done']} 天做到了，{st['partial']} 天做了一部分，{st['skipped']} 天没做到。"]
+        by_kind = _by_kind(week_cks)
+        walk, resist = by_kind.get("walk", 0), by_kind.get("resist", 0)
+        parts = []
+        if walk:
+            parts.append(f"{kind_labels['walk']} {walk} 天")
+        if resist:
+            parts.append(f"{kind_labels['resist']} {resist} 天")
+        if parts:
+            lines.append("动起来的：" + "，".join(parts) + "。")
+        easiest = next((_task(k["day"])["title"] for k in week_cks if k["status"] == "done" and _task(k["day"]).get("kind") in ("diet", "walk", "resist")), None)
+        if easiest:
+            lines.append(f"最顺手的是「{easiest}」。")
+        if st["top_barrier"]:
+            lines.append(f"最常遇到的阻碍是「{st['top_barrier']}」。")
+        lines.append(w["next"] if w.get("next") else "下一周继续，一次只多做一点。")
+        out.append({"week": w["week"], "title": w["title"], "days": [first, last], "lines": lines, **st})
+    return out
+
+
+def summary(doc: dict) -> dict | None:
+    """第 30 天的 30 天总结。"""
+    cks = doc["challenge"]["checkins"]
+    if not _checkin(doc, DAYS):
+        return None
+    c = content()
+    st = _stats(cks)
+    keep = next((k["answer"] for k in cks if k["day"] == 24 and k.get("answer")), None)
+    by_kind = _by_kind(cks)
+    kind_labels = c["kind_labels"]
+    lines = [f"30 天里，你有 {st['done']} 天做到了，{st['partial']} 天做了一部分，{st['skipped']} 天没做到。"]
+    parts = [f"{kind_labels[k]} {by_kind[k]} 天" for k in ("walk", "resist") if by_kind.get(k)]
+    if parts:
+        lines.append("动起来的：" + "，".join(parts) + "。")
+    if st["top_barrier"]:
+        lines.append(f"最常遇到的阻碍是「{st['top_barrier']}」。")
     if keep:
         lines.append(f"你想继续坚持的是「{keep}」。")
-    lines.append("能走完这 7 天，说明你有改变的意愿，这是最重要的。")
-    return {"title": c["summary"]["title"], "lines": lines, "done": len(done), "partial": len(partial), "skipped": len(skipped),
-            "top_barrier": top_barrier, "keep": keep, "invite": c["summary"]["invite"]}
+    lines.append("能走完这 30 天，说明你有改变的意愿，这是最重要的。")
+    return {"title": c["summary"]["title"], "lines": lines, **st, "keep": keep, "invite": c["summary"]["invite"]}
 
 
 def view(doc: dict) -> dict:
     cur = current_day(doc)
     cks = doc["challenge"]["checkins"]
-    days = [{"day": d, "title": _task(d)["title"], "status": (_checkin(doc, d) or {}).get("status"), "unlocked": d <= cur}
+    days = [{"day": d, "title": _task(d)["title"], "status": (_checkin(doc, d) or {}).get("status"), "unlocked": d <= cur, "week": (d - 1) // 7 + 1}
             for d in range(1, DAYS + 1)]
     out = {
         "session_id": doc["session_id"], "mode": doc["mode"], "current_day": cur, "days": days,
         "blocked": bool(doc["challenge"].get("blocked")), "demo": demo_enabled(),
         "statuses": content()["statuses"], "barriers": content()["barriers"], "footer": content()["common_footer"],
+        "days_total": DAYS,
         "interest": doc["interest"], "confirmed": doc["user_confirmed"],
     }
     if out["blocked"]:
@@ -192,6 +248,7 @@ def view(doc: dict) -> dict:
     out["tasks"] = {d: _task_view(doc, d) for d in range(1, cur + 1)}
     out["today_checkin"] = _checkin(doc, cur)
     out["checkins"] = {c["day"]: c for c in cks}
+    out["weekly"] = weekly(doc)
     out["summary"] = summary(doc)
     return out
 
@@ -305,3 +362,9 @@ def advance(sid: str) -> dict:
         ch["demo_offset_days"] = int(ch.get("demo_offset_days", 0)) + 1
         save(doc)
     return view(doc)
+
+
+def config() -> dict:
+    """入口页要显示的一次性提示文案。"""
+    c = content()
+    return {"title": c["title"], "subtitle": c["subtitle"], "days": DAYS, "notices": c["notices"]}

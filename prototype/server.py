@@ -163,6 +163,11 @@ def _ce(fn, *a):
         raise HTTPException(e.status, str(e))
 
 
+@app.get("/api/challenge/config")
+def api_challenge_config():
+    return challenge.config()
+
+
 @app.post("/api/challenge/start")
 def api_challenge_start(payload: dict = Body(...)):
     return _ce(challenge.start, payload)

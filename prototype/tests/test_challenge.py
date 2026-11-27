@@ -39,7 +39,7 @@ def adv(sid):
 def all_texts():
     c = challenge.content()
     for t in c["tasks"]:
-        for k in ("title", "task", "why", "how", "note_conservative", "done_msg", "partial_msg"):
+        for k in ("title", "task", "why", "how", "note_conservative", "note_hypo", "done_msg", "partial_msg"):
             if t.get(k):
                 yield t[k]
         if t.get("question"):
@@ -47,6 +47,8 @@ def all_texts():
     yield from c["barrier_tips"].values()
     yield from c["feedback"].values()
     yield c["summary"]["invite"]
+    for n in c["notices"].values():
+        yield n["text"]
 
 
 def test_option_labels_are_user_answers_not_advice():
@@ -73,7 +75,7 @@ def test_task_library_has_no_reduction_advice():
 
 def test_library_structure():
     c = challenge.content()
-    assert [t["day"] for t in c["tasks"]] == list(range(1, 8))
+    assert [t["day"] for t in c["tasks"]] == list(range(1, 31))
     ids = {u["id"] for u in knowledge.load_units()}
     for t in c["tasks"]:
         assert set(t["kb_refs"]) <= ids, t["day"]
@@ -87,7 +89,7 @@ def test_start_ok_and_conservative_mode():
     sid, r = start("insulin")
     j = r.json()
     assert r.status_code == 200 and j["current_day"] == 1 and j["mode"] == "conservative"
-    assert j["today"]["title"] and len(j["days"]) == 7
+    assert j["today"]["title"] and len(j["days"]) == 30
     sid2, r2 = start("no")
     assert r2.json()["mode"] == "standard"
 
@@ -98,11 +100,21 @@ def test_start_requires_consent_screening_and_drug():
     assert start(uses_glucose_lowering_drug="banana")[1].status_code == 400
 
 
-@pytest.mark.parametrize("bad", [{"adult": False}, {"pregnant_or_lactating": True}, {"type1_diabetes": True},
-                                 {"severe_kidney_or_eating_disorder": True}])
-def test_start_excludes(bad):
-    sid, r = start(screening={**OK, **bad})
+def test_start_excludes_minors_only():
+    sid, r = start(screening={**OK, "adult": False})
     assert r.status_code == 403 and client.get(f"/api/challenge/{sid}").status_code == 404
+
+
+@pytest.mark.parametrize("flag", ["pregnant_or_lactating", "type1_diabetes", "severe_kidney_or_eating_disorder"])
+def test_special_cases_can_join(flag):
+    # 这三类不拦人，页面入口会先给一次提示，再让用户继续
+    sid, r = start(screening={**OK, flag: True})
+    assert r.status_code == 200 and r.json()["current_day"] == 1
+
+
+def test_config_has_entry_notices():
+    j = client.get("/api/challenge/config").json()
+    assert j["days"] == 30 and j["notices"]["hypo"]["text"] and j["notices"]["special"]["text"]
 
 
 def test_start_is_resumable():
@@ -122,7 +134,7 @@ def test_medication_text_in_tasks_for_conservative_only():
     for _ in range(2):
         adv(sid)
     j = client.get(f"/api/challenge/{sid}").json()
-    assert j["current_day"] == 3 and "医生" in j["today"]["note"]
+    assert j["current_day"] == 3 and "医生" in j["today"]["note"] and "空腹" in j["today"]["note"]
     sid2, _ = start("no")
     for _ in range(2):
         adv(sid2)
@@ -155,38 +167,55 @@ def test_checkin_overwrites_same_day():
     assert len(r["state"]["checkins"]) == 1 and r["state"]["today_checkin"]["status"] == "done"
 
 
-def test_full_seven_days_summary_interest_delete(tmp_data):
+def test_full_thirty_days_weekly_and_final_summary(tmp_data):
     sid, _ = start("oral")
-    statuses = ["done", "partial", "skipped", "done", "done", "skipped", "done"]
-    for i, s in enumerate(statuses, start=1):
+    pattern = ["done", "partial", "skipped", "done", "done", "skipped", "done"]
+    for i in range(1, 31):
+        s = "done" if i == 24 else pattern[(i - 1) % 7]
         kw = {"day": i, "status": s}
         if s == "skipped":
             kw["barrier"] = "eating_out"
-        elif i == 7:
+        elif i == 24:
             kw["answer"] = "先吃蔬菜"
         r = ck(sid, **kw)
         assert r.status_code == 200
-        if i < 7:
+        # 每周日出本周小结
+        wk = r.json()["state"]["weekly"]
+        assert len(wk) == i // 7 if i < 28 else len(wk) == 4
+        if i < 30:
             adv(sid)
     st = client.get(f"/api/challenge/{sid}").json()
+    w1 = st["weekly"][0]
+    assert w1["week"] == 1 and w1["done"] == 4 and w1["partial"] == 1 and w1["skipped"] == 2
+    assert w1["top_barrier"] == "在外面吃，不方便"
+    assert any("散步" in line or "力量练习" in line for line in w1["lines"])
     sm = st["summary"]
-    assert sm["done"] == 4 and sm["partial"] == 1 and sm["skipped"] == 2 and sm["top_barrier"] == "在外面吃，不方便"
+    assert sm["done"] + sm["partial"] + sm["skipped"] == 30
     assert any("先吃蔬菜" in line for line in sm["lines"])
     r = client.post(f"/api/challenge/{sid}/interest", json={"coaching_interest": True, "notes": "想有人带"}).json()
     assert r["interest"]["coaching_interest"] is True and r["confirmed"] is True
     import json
     doc = json.loads((tmp_data / f"{sid}.json").read_text(encoding="utf-8"))
-    assert doc["status"] == "completed" and len(doc["challenge"]["checkins"]) == 7
+    assert doc["status"] == "completed" and len(doc["challenge"]["checkins"]) == 30
     assert "name" not in doc and "phone" not in doc
     assert client.delete(f"/api/session/{sid}").json()["deleted"] is True
     assert client.get(f"/api/challenge/{sid}").status_code == 404
 
 
-def test_advance_stops_at_day_seven():
+def test_weekly_summary_appears_at_week_end():
     sid, _ = start("no")
-    for _ in range(10):
+    for _ in range(6):
+        adv(sid)
+    r = ck(sid, day=7, status="done", answer="餐后散步").json()
+    assert [w["week"] for w in r["state"]["weekly"]] == [1]
+    assert r["state"]["summary"] is None
+
+
+def test_advance_stops_at_day_thirty():
+    sid, _ = start("no")
+    for _ in range(40):
         j = adv(sid)
-    assert j["current_day"] == 7
+    assert j["current_day"] == 30
 
 
 # ---------- 备注与风险 ----------

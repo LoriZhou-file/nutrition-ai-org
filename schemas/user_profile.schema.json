@@ -118,7 +118,7 @@
     },
     "challenge": {
       "type": "object",
-      "description": "7 天控糖挑战的打卡记录。档案由打卡逐步形成，记录的是行为与障碍，不含血糖数值。",
+      "description": "30 天控糖自我管理（兼容原 7 天挑战）的打卡记录。档案由打卡逐步形成，记录的是行为与障碍，不含血糖数值。",
       "properties": {
         "program": { "type": "string" },
         "version": { "type": "string" },
@@ -131,7 +131,7 @@
             "type": "object",
             "required": ["day", "status"],
             "properties": {
-              "day": { "type": "integer", "minimum": 1, "maximum": 7 },
+              "day": { "type": "integer", "minimum": 1, "maximum": 30 },
               "date": { "type": "string", "format": "date" },
               "status": { "type": "string", "enum": ["done", "partial", "skipped"] },
               "barrier": { "type": ["string", "null"] },
